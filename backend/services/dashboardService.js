@@ -36,25 +36,28 @@ const getDashboardSummary = async () => {
 
   const todaySales = todaySalesAgg[0] || { count: 0, revenue: 0 };
 
-  // Monthly revenue
+  // Monthly stats (revenue + bill count)
   const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
-  const monthlyRevenueAgg = await Sale.aggregate([
+  const monthlyAgg = await Sale.aggregate([
     { $match: { createdAt: { $gte: monthStart } } },
-    { $group: { _id: null, total: { $sum: '$grandTotal' } } },
+    {
+      $group: {
+        _id: null,
+        total: { $sum: '$grandTotal' },
+        count: { $sum: 1 },
+      },
+    },
   ]);
 
-  const monthlyRevenue = monthlyRevenueAgg[0]
-    ? monthlyRevenueAgg[0].total
-    : 0;
+  const monthlySales = monthlyAgg[0] || { total: 0, count: 0 };
 
   return {
     totalProducts,
     lowStockCount,
-    todaySales: {
-      count: todaySales.count,
-      revenue: todaySales.revenue,
-    },
-    monthlyRevenue,
+    todayRevenue: todaySales.revenue,
+    todayBillsCount: todaySales.count,
+    monthlyRevenue: monthlySales.total,
+    monthlyBillsCount: monthlySales.count,
   };
 };
 

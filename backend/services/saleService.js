@@ -145,19 +145,31 @@ const createSale = async (data) => {
  * @param {Object} options - { page, limit, startDate, endDate }
  * @returns {{ sales, total, page, limit }}
  */
-const getSales = async ({ page = 1, limit = 10, startDate, endDate }) => {
+const getSales = async ({ page = 1, limit = 10, startDate, endDate, from, to, search }) => {
   const filter = {};
 
-  if (startDate || endDate) {
+  const start = startDate || from;
+  const end = endDate || to;
+
+  if (start || end) {
     filter.createdAt = {};
-    if (startDate) {
-      filter.createdAt.$gte = new Date(startDate);
+    if (start) {
+      filter.createdAt.$gte = new Date(start);
     }
-    if (endDate) {
-      const end = new Date(endDate);
-      end.setHours(23, 59, 59, 999);
-      filter.createdAt.$lte = end;
+    if (end) {
+      const endD = new Date(end);
+      endD.setHours(23, 59, 59, 999);
+      filter.createdAt.$lte = endD;
     }
+  }
+
+  if (search && search.trim() !== '') {
+    const q = search.trim();
+    filter.$or = [
+      { billNumber: { $regex: q, $options: 'i' } },
+      { customerName: { $regex: q, $options: 'i' } },
+      { customerPhone: { $regex: q, $options: 'i' } },
+    ];
   }
 
   const pageNum = parseInt(page, 10) || 1;

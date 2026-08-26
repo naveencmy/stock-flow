@@ -21,8 +21,8 @@ const createSale = asyncHandler(async (req, res) => {
 // @desc    Get all sales with date range filter & pagination
 // @route   GET /api/sales
 const getSales = asyncHandler(async (req, res) => {
-  const { page, limit, startDate, endDate } = req.query;
-  const result = await saleService.getSales({ page, limit, startDate, endDate });
+  const { page, limit, startDate, endDate, from, to, search } = req.query;
+  const result = await saleService.getSales({ page, limit, startDate, endDate, from, to, search });
 
   res.status(200).json({
     success: true,

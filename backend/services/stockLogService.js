@@ -10,10 +10,13 @@ const Product = require('../models/Product');
  * @param {Object} options - { page, limit, product }
  * @returns {{ logs, total, page, limit }}
  */
-const getStockLogs = async ({ page = 1, limit = 20, product }) => {
+const getStockLogs = async ({ page = 1, limit = 20, product, changeType }) => {
   const filter = {};
   if (product) {
     filter.product = product;
+  }
+  if (changeType) {
+    filter.changeType = changeType;
   }
 
   const pageNum = parseInt(page, 10) || 1;

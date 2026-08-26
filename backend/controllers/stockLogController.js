@@ -9,8 +9,8 @@ const stockLogService = require('../services/stockLogService');
 // @desc    Get all stock logs with pagination & optional product filter
 // @route   GET /api/stock-logs
 const getStockLogs = asyncHandler(async (req, res) => {
-  const { page, limit, product } = req.query;
-  const result = await stockLogService.getStockLogs({ page, limit, product });
+  const { page, limit, product, changeType } = req.query;
+  const result = await stockLogService.getStockLogs({ page, limit, product, changeType });
 
   res.status(200).json({
     success: true,
