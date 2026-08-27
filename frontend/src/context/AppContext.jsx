@@ -9,6 +9,25 @@ export const AppProvider = ({ children }) => {
   const [cart, setCart] = useState([]);
   const [loading, setLoading] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
+    try {
+      return localStorage.getItem('np_sidebar_collapsed') === 'true';
+    } catch {
+      return false;
+    }
+  });
+
+  const toggleSidebarCollapse = () => {
+    setIsSidebarCollapsed(prev => {
+      const nextVal = !prev;
+      try {
+        localStorage.setItem('np_sidebar_collapsed', String(nextVal));
+      } catch (e) {
+        console.error('Failed to save sidebar state', e);
+      }
+      return nextVal;
+    });
+  };
 
   const addToCart = (product) => {
     if (!product || product.stockQty <= 0) {
@@ -76,7 +95,8 @@ export const AppProvider = ({ children }) => {
       cart, setCart,
       loading, setLoading,
       addToCart, updateCartQty, removeFromCart, clearCart,
-      isSidebarOpen, toggleSidebar, closeSidebar
+      isSidebarOpen, toggleSidebar, closeSidebar,
+      isSidebarCollapsed, toggleSidebarCollapse
     }}>
       {children}
     </AppContext.Provider>
