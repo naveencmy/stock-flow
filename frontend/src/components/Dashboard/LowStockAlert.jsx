@@ -61,7 +61,9 @@ export const LowStockAlert = ({ products = [], onRestockClick }) => {
                   </td>
                   <td className="px-4 py-3.5 text-xs text-slate-600">
                     <span className="px-2 py-0.5 rounded-md bg-slate-100 font-medium">
-                      {item.category}
+                      {typeof item.category === 'object' && item.category !== null
+                        ? item.category.name
+                        : (item.category || 'General')}
                     </span>
                   </td>
                   <td className="px-4 py-3.5 text-center font-bold text-red-600">

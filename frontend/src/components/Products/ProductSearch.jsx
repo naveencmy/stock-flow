@@ -55,11 +55,15 @@ export const ProductSearch = ({
             className="py-2 px-3 text-sm bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium cursor-pointer"
           >
             <option value="All">All Categories</option>
-            {categories.map((cat) => (
-              <option key={cat} value={cat}>
-                {cat}
-              </option>
-            ))}
+            {categories.map((cat, idx) => {
+              const val = typeof cat === 'object' && cat !== null ? (cat._id || cat.name) : cat;
+              const label = typeof cat === 'object' && cat !== null ? cat.name : cat;
+              return (
+                <option key={val || idx} value={val}>
+                  {label}
+                </option>
+              );
+            })}
           </select>
         </div>
 

@@ -92,20 +92,25 @@ export const ProductSelector = () => {
           >
             All
           </button>
-          {categories.map((cat) => (
-            <button
-              key={cat}
-              type="button"
-              onClick={() => setSelectedCategory(cat)}
-              className={`px-3 py-1.5 rounded-lg font-semibold transition-colors shrink-0 ${
-                selectedCategory === cat
-                  ? 'bg-blue-600 text-white shadow-xs'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
+          {categories.map((cat, idx) => {
+            const val = typeof cat === 'object' && cat !== null ? (cat._id || cat.name) : cat;
+            const label = typeof cat === 'object' && cat !== null ? cat.name : cat;
+            const isSelected = selectedCategory === val || selectedCategory === label;
+            return (
+              <button
+                key={val || idx}
+                type="button"
+                onClick={() => setSelectedCategory(val)}
+                className={`px-3 py-1.5 rounded-lg font-semibold transition-colors shrink-0 ${
+                  isSelected
+                    ? 'bg-blue-600 text-white shadow-xs'
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                }`}
+              >
+                {label}
+              </button>
+            );
+          })}
         </div>
       </div>
 

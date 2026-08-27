@@ -87,7 +87,9 @@ export const ProductTable = ({
 
                   <td className="px-4 py-4 text-xs">
                     <span className="px-2.5 py-1 rounded-md bg-slate-100 text-slate-700 font-medium border border-slate-200/60">
-                      {item.category}
+                      {typeof item.category === 'object' && item.category !== null
+                        ? item.category.name
+                        : (item.category || 'General')}
                     </span>
                   </td>
 
