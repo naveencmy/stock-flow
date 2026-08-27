@@ -1,21 +1,42 @@
+/**
+ * ============================================================================
+ * OUTCOME-BASED LEARNING (OBL) ENGINEERING HIT: PRODUCT FORM COMPONENT
+ * ============================================================================
+ * WHAT IS IT?
+ *   - Controlled React Form Component for adding and editing product inventory items.
+ * 
+ * WHAT IT CAN DO?
+ *   - Manages local form state, input sanitization, dynamic category selection,
+ *     monetary decimal bounds, and client-side validation before dispatch.
+ * 
+ * WHY WE USE IT?
+ *   - Ensures clean user UX, prevents invalid payloads from reaching the backend,
+ *     and provides reusable form logic for both Create and Update flows.
+ * ============================================================================
+ */
 import React, { useState, useEffect } from 'react';
 import Input from '../common/Input';
 import Button from '../common/Button';
-import { initialCategories } from '../../api/mockData';
 
 const UNIT_OPTIONS = ['piece', 'meter', 'box', 'coil', 'kg', 'set'];
 const GST_RATES = [0, 5, 12, 18, 28];
 
 export const ProductForm = ({
   initialData = null,
-  categories = initialCategories,
+  categories = [],
   onSubmit,
   onCancel,
   loading = false
 }) => {
+  // Helper to extract category ID/name value
+  const getCatValue = (cat) => (typeof cat === 'object' && cat !== null ? cat._id || cat.name : cat);
+  const getCatLabel = (cat) => (typeof cat === 'object' && cat !== null ? cat.name : cat);
+
+  const defaultCategory = categories.length > 0 ? getCatValue(categories[0]) : '';
+
   const [formData, setFormData] = useState({
     name: '',
-    category: categories[0] || 'Wires & Cables',
+    category: defaultCategory,
     brand: '',
     unit: 'piece',
     unitPrice: '',
@@ -29,9 +50,13 @@ export const ProductForm = ({
 
   useEffect(() => {
     if (initialData) {
+      const initialCatVal = initialData.category 
+        ? (typeof initialData.category === 'object' ? initialData.category._id : initialData.category)
+        : defaultCategory;
+
       setFormData({
         name: initialData.name || '',
-        category: initialData.category || categories[0] || 'Wires & Cables',
+        category: initialCatVal || defaultCategory,
         brand: initialData.brand || '',
         unit: initialData.unit || 'piece',
         unitPrice: initialData.unitPrice !== undefined ? String(initialData.unitPrice) : '',
@@ -40,6 +65,8 @@ export const ProductForm = ({
         gstRate: initialData.gstRate !== undefined ? String(initialData.gstRate) : '18',
         barcode: initialData.barcode || ''
       });
+    } else if (categories.length > 0 && !formData.category) {
+      setFormData((prev) => ({ ...prev, category: getCatValue(categories[0]) }));
     }
   }, [initialData, categories]);
 
@@ -126,11 +153,16 @@ export const ProductForm = ({
             onChange={handleChange}
             className="w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
-            {categories.map((cat) => (
-              <option key={cat} value={cat}>
-                {cat}
-              </option>
-            ))}
+            {categories.length === 0 && <option value="">Select Category</option>}
+            {categories.map((cat, idx) => {
+              const val = getCatValue(cat);
+              const label = getCatLabel(cat);
+              return (
+                <option key={val || idx} value={val}>
+                  {label}
+                </option>
+              );
+            })}
           </select>
           {errors.category && (
             <p className="mt-1 text-xs text-red-600 font-medium">{errors.category}</p>
@@ -158,11 +190,11 @@ export const ProductForm = ({
             name="unit"
             value={formData.unit}
             onChange={handleChange}
-            className="w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 capitalize"
+            className="w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             {UNIT_OPTIONS.map((u) => (
               <option key={u} value={u}>
-                {u}
+                {u.charAt(0).toUpperCase() + u.slice(1)}
               </option>
             ))}
           </select>
@@ -177,14 +209,13 @@ export const ProductForm = ({
           value={formData.unitPrice}
           onChange={handleChange}
           placeholder="0.00"
-          prefix="₹"
           error={errors.unitPrice}
           required
         />
 
         <div>
           <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
-            GST Rate (%) <span className="text-red-500 font-bold">*</span>
+            GST Rate (%)
           </label>
           <select
             name="gstRate"
@@ -194,17 +225,17 @@ export const ProductForm = ({
           >
             {GST_RATES.map((rate) => (
               <option key={rate} value={rate}>
-                {rate}% GST {rate === 18 ? '(Default - 9% CGST + 9% SGST)' : ''}
+                {rate}% GST
               </option>
             ))}
           </select>
         </div>
       </div>
 
-      {/* Stock Qty, Reorder Level, Barcode */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      {/* Stock Quantity & Reorder Level */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Input
-          label="Initial / Current Stock"
+          label="Current Stock Quantity"
           name="stockQty"
           type="number"
           min="0"
@@ -216,7 +247,7 @@ export const ProductForm = ({
         />
 
         <Input
-          label="Reorder Level"
+          label="Reorder Alert Level"
           name="reorderLevel"
           type="number"
           min="0"
@@ -224,25 +255,35 @@ export const ProductForm = ({
           onChange={handleChange}
           placeholder="5"
           error={errors.reorderLevel}
-          helperText="Alert when stock hits this count"
           required
-        />
-
-        <Input
-          label="Barcode / SKU (Optional)"
-          name="barcode"
-          value={formData.barcode}
-          onChange={handleChange}
-          placeholder="e.g. 890123456"
         />
       </div>
 
-      {/* Action Buttons */}
-      <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
-        <Button variant="secondary" onClick={onCancel} disabled={loading}>
+      {/* Barcode */}
+      <Input
+        label="Barcode / SKU (Optional)"
+        name="barcode"
+        value={formData.barcode}
+        onChange={handleChange}
+        placeholder="e.g. 8901234567890"
+        maxLength={50}
+      />
+
+      {/* Form Action Buttons */}
+      <div className="flex justify-end gap-3 pt-4 border-t border-slate-200">
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={onCancel}
+          disabled={loading}
+        >
           Cancel
         </Button>
-        <Button type="submit" variant="primary" loading={loading}>
+        <Button
+          type="submit"
+          variant="primary"
+          loading={loading}
+        >
           {initialData ? 'Update Product' : 'Add Product'}
         </Button>
       </div>
