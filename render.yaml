@@ -1,0 +1,33 @@
+services:
+  # ─── Backend Web Service (Node.js/Express) ──────────────────────────
+  - type: web
+    name: nandhipriya-electricals-api
+    env: node
+    plan: free
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5000
+      - key: MONGODB_URI
+        sync: false # Set in Render Dashboard with MongoDB Atlas connection string
+
+  # ─── Frontend Static Site (React/Vite) ──────────────────────────────
+  - type: web
+    name: nandhipriya-electricals-ui
+    env: static
+    plan: free
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_API_URL
+        value: https://nandhipriya-electricals-api.onrender.com/api

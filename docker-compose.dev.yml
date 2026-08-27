@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:6.0
+    container_name: np_mongodb_dev
+    restart: unless-stopped
+    command: ["--replSet", "rs0", "--bind_ip_all"]
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_dev_data:/data/db
+    networks:
+      - dev_network
+
+  backend:
+    image: node:18-alpine
+    container_name: np_backend_dev
+    working_dir: /usr/src/app
+    command: npm run dev
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./backend:/usr/src/app
+      - /usr/src/app/node_modules
+    environment:
+      - NODE_ENV=development
+      - PORT=5000
+      - MONGODB_URI=mongodb://mongodb:27017/nandhipriya_electricals?replicaSet=rs0
+    depends_on:
+      - mongodb
+    networks:
+      - dev_network
+
+  frontend:
+    image: node:18-alpine
+    container_name: np_frontend_dev
+    working_dir: /app
+    command: npm run dev -- --host 0.0.0.0
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - VITE_API_URL=http://localhost:5000/api
+    depends_on:
+      - backend
+    networks:
+      - dev_network
+
+volumes:
+  mongodb_dev_data:
+
+networks:
+  dev_network:
