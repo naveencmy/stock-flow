@@ -16,13 +16,32 @@ const saleItemSchema = new mongoose.Schema({
 const saleSchema = new mongoose.Schema({
   billNumber: { type: String, required: true },
   customerName: { type: String, trim: true, maxlength: 100, default: 'Walk-in Customer' },
-  customerPhone: { type: String, trim: true, match: [/^\d{10}$/, '10 digits only'], default: null },
+  customerPhone: {
+    type: String,
+    trim: true,
+    default: null,
+    validate: {
+      validator: function(v) {
+        return !v || /^\d{10}$/.test(v);
+      },
+      message: '10 digits only'
+    }
+  },
   items: [saleItemSchema],
   subTotal: { type: Number, required: true, min: 0 },
   totalGst: { type: Number, required: true, min: 0 },
   discountAmt: { type: Number, default: 0, min: 0 },
   grandTotal: { type: Number, required: true, min: 0 },
-  paymentMethod: { type: String, enum: ['cash', 'upi', 'card'], default: 'cash' }
+  paymentMethod: {
+    type: String,
+    enum: ['cash', 'upi', 'card', 'credit'],
+    default: 'cash',
+    lowercase: true,
+    trim: true
+  },
+  whatsappSent: { type: Boolean, default: false },
+  whatsappSentAt: { type: Date, default: null },
+  whatsappProvider: { type: String, default: null }
 }, { timestamps: true });
 
 saleSchema.index({ billNumber: 1 }, { unique: true });

@@ -12,6 +12,7 @@ const {
   getSaleStats,
   getSale,
   getSalePdf,
+  sendWhatsApp,
 } = require('../controllers/saleController');
 const {
   validateCreateSale,
@@ -26,5 +27,6 @@ router.get('/stats', getSaleStats);
 
 router.get('/:id', validateMongoId, getSale);
 router.get('/:id/pdf', validateMongoId, getSalePdf);
+router.post('/:id/whatsapp', validateMongoId, sendWhatsApp);
 
 module.exports = router;

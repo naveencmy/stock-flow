@@ -22,16 +22,17 @@ import toast from 'react-hot-toast';
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
   headers: { 'Content-Type': 'application/json' },
-  timeout: 10000
+  timeout: 30000
 });
 
 // Response Interceptor for centralized error feedback
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    const errorMsg = error.response?.data?.message || error.message || 'Network request failed';
     if (error.response?.data?.message) {
       toast.error(error.response.data.message);
+    } else if (error.code === 'ECONNABORTED') {
+      toast.error('Server took too long to respond. Please refresh.');
     }
     return Promise.reject(error);
   }

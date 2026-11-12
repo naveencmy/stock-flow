@@ -169,9 +169,16 @@ const validateCreateSale = [
     .isLength({ max: 100 })
     .withMessage('Customer name must be at most 100 characters'),
   body('customerPhone')
-    .optional()
+    .optional({ values: 'falsy' })
+    .customSanitizer((val) => {
+      if (!val) return '';
+      const digits = String(val).replace(/\D/g, '');
+      if (digits.length === 12 && digits.startsWith('91')) return digits.slice(2);
+      if (digits.length === 11 && digits.startsWith('0')) return digits.slice(1);
+      return digits;
+    })
     .matches(/^\d{10}$/)
-    .withMessage('Customer phone must be a 10-digit number'),
+    .withMessage('Customer phone must be a valid 10-digit mobile number'),
   body('items')
     .isArray({ min: 1 })
     .withMessage('At least one item is required'),
@@ -189,11 +196,18 @@ const validateCreateSale = [
     .optional()
     .isFloat({ min: 0 })
     .withMessage('Discount amount must be a non-negative number'),
+  body('discount')
+    .optional()
+    .isFloat({ min: 0 })
+    .withMessage('Discount must be a non-negative number'),
   body('paymentMethod')
     .optional()
     .isString()
     .withMessage('Payment method must be a string')
-    .trim(),
+    .trim()
+    .toLowerCase()
+    .isIn(['cash', 'upi', 'card', 'credit'])
+    .withMessage('Payment method must be one of: cash, upi, card, credit'),
   checkValidation,
 ];
 

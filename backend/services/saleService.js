@@ -8,6 +8,7 @@ const Sale = require('../models/Sale');
 const Product = require('../models/Product');
 const StockLog = require('../models/StockLog');
 const { getNextBillNumber } = require('../utils/autoIncrement');
+const whatsappService = require('./whatsappService');
 
 /**
  * Create a new sale using an atomic Mongoose transaction.
@@ -19,17 +20,20 @@ const { getNextBillNumber } = require('../utils/autoIncrement');
  * @throws {Error} on validation failure or insufficient stock (transaction aborted)
  */
 const createSale = async (data) => {
-  const { customerName, customerPhone, items, discountAmt = 0, paymentMethod } = data;
+  const { customerName, customerPhone, items, paymentMethod } = data;
+  const discountAmt = Math.max(0, Number(data.discountAmt !== undefined ? data.discountAmt : data.discount) || 0);
+  const sanitizedPhone = customerPhone && String(customerPhone).trim() ? String(customerPhone).trim() : null;
+  const payMethod = (paymentMethod || 'cash').toString().toLowerCase().trim();
 
-  const session = await mongoose.startSession();
-  session.startTransaction();
-
-  try {
+  // Helper function executing the sale logic with or without session
+  const runSaleOperations = async (session = null) => {
     // ── Step 1-2: Validate each item & snapshot pricing ──────────────
     const saleItems = [];
 
     for (const item of items) {
-      const product = await Product.findById(item.productId).session(session);
+      let productQuery = Product.findById(item.productId);
+      if (session) productQuery = productQuery.session(session);
+      const product = await productQuery;
 
       if (!product) {
         throw new Error(`Product not found: ${item.productId}`);
@@ -75,22 +79,25 @@ const createSale = async (data) => {
     // ── Step 8: Create Sale document ─────────────────────────────────
     const saleItemsClean = saleItems.map(({ _productDoc, ...rest }) => rest);
 
-    const [sale] = await Sale.create(
-      [
-        {
-          billNumber,
-          customerName,
-          customerPhone,
-          items: saleItemsClean,
-          subTotal,
-          totalGst,
-          discountAmt,
-          grandTotal,
-          paymentMethod,
-        },
-      ],
-      { session }
-    );
+    const saleDocData = {
+      billNumber,
+      customerName: customerName ? customerName.trim() : 'Walk-in Customer',
+      customerPhone: sanitizedPhone,
+      items: saleItemsClean,
+      subTotal: Math.round(subTotal * 100) / 100,
+      totalGst: Math.round(totalGst * 100) / 100,
+      discountAmt,
+      grandTotal: Math.max(0, Math.round(grandTotal * 100) / 100),
+      paymentMethod: payMethod,
+    };
+
+    let sale;
+    if (session) {
+      const [created] = await Sale.create([saleDocData], { session });
+      sale = created;
+    } else {
+      sale = await Sale.create(saleDocData);
+    }
 
     // ── Step 9-10: Decrement stock & create stock logs ───────────────
     for (const item of saleItems) {
@@ -98,46 +105,109 @@ const createSale = async (data) => {
       const prevStock = product.stockQty;
       const newStock = prevStock - item.quantity;
 
-      await Product.findByIdAndUpdate(
-        product._id,
-        { stockQty: newStock },
-        { session }
-      );
+      if (session) {
+        await Product.findByIdAndUpdate(
+          product._id,
+          { stockQty: newStock },
+          { session }
+        );
 
-      await StockLog.create(
-        [
-          {
-            product: product._id,
-            productName: product.name,
-            changeType: 'sale',
-            qtyChange: -item.quantity,
-            prevStock,
-            newStock,
-            referenceId: sale._id,
-            note: `Sold ${item.quantity} units in bill ${billNumber}`,
-          },
-        ],
-        { session }
-      );
+        await StockLog.create(
+          [
+            {
+              product: product._id,
+              productName: product.name,
+              changeType: 'sale',
+              qtyChange: -item.quantity,
+              prevStock,
+              newStock,
+              referenceId: sale._id,
+              note: `Sold ${item.quantity} units in bill ${billNumber}`,
+            },
+          ],
+          { session }
+        );
+      } else {
+        await Product.findByIdAndUpdate(product._id, { stockQty: newStock });
+
+        await StockLog.create({
+          product: product._id,
+          productName: product.name,
+          changeType: 'sale',
+          qtyChange: -item.quantity,
+          prevStock,
+          newStock,
+          referenceId: sale._id,
+          note: `Sold ${item.quantity} units in bill ${billNumber}`,
+        });
+      }
     }
 
-    // ── Step 11: Commit transaction ──────────────────────────────────
+    return { sale, billNumber };
+  };
+
+  let result;
+  let session = null;
+
+  try {
+    session = await mongoose.startSession();
+    session.startTransaction();
+
+    result = await runSaleOperations(session);
     await session.commitTransaction();
-
-    // ── Step 12: Return populated sale ────────────────────────────────
-    const populatedSale = await Sale.findById(sale._id).populate(
-      'items.product',
-      'name productCode'
-    );
-
-    return { sale: populatedSale, billNumber };
   } catch (error) {
-    await session.abortTransaction();
-    error.statusCode = 400;
-    throw error;
+    if (session) {
+      try {
+        await session.abortTransaction();
+      } catch (_) {}
+    }
+
+    // Fallback if standalone MongoDB does not support replica set transactions
+    const isTxnUnsupported =
+      error.message &&
+      (error.message.includes('replica set') ||
+       error.message.includes('Transaction numbers are only allowed') ||
+       error.message.includes('does not support retryable writes') ||
+       error.codeName === 'IllegalOperation');
+
+    if (isTxnUnsupported) {
+      result = await runSaleOperations(null);
+    } else {
+      error.statusCode = 400;
+      throw error;
+    }
   } finally {
-    session.endSession();
+    if (session) {
+      try {
+        await session.endSession();
+      } catch (_) {}
+    }
   }
+
+  // ── Step 11: Return populated sale ────────────────────────────────
+  const populatedSale = await Sale.findById(result.sale._id).populate(
+    'items.product',
+    'name productCode'
+  );
+
+  // Trigger automated WhatsApp dispatch (Open-WA or configured provider)
+  if (populatedSale.customerPhone) {
+    try {
+      const waResult = await whatsappService.sendBillNotification(populatedSale);
+      if (waResult.success) {
+        populatedSale.whatsappSent = true;
+        populatedSale.whatsappSentAt = new Date();
+        await Sale.findByIdAndUpdate(result.sale._id, {
+          whatsappSent: true,
+          whatsappSentAt: populatedSale.whatsappSentAt,
+        });
+      }
+    } catch (waErr) {
+      console.warn(`[WhatsApp Service] ${waErr.message}`);
+    }
+  }
+
+  return { sale: populatedSale, billNumber: result.billNumber };
 };
 
 /**
@@ -309,6 +379,44 @@ const getSalePdfData = async (id) => {
   return pdfData;
 };
 
+/**
+ * Trigger or re-send WhatsApp notification for a sale by ID.
+ * @param {String} id - Sale ID
+ * @returns {Promise<Object>} dispatch result
+ */
+const sendWhatsAppForSale = async (id) => {
+  const sale = await Sale.findById(id).populate(
+    'items.product',
+    'name productCode brand unit'
+  );
+
+  if (!sale) {
+    const error = new Error('Sale not found');
+    error.statusCode = 404;
+    throw error;
+  }
+
+  if (!sale.customerPhone) {
+    const error = new Error('Sale has no customer phone number');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const result = await whatsappService.sendBillNotification(sale);
+  if (result.success) {
+    await Sale.findByIdAndUpdate(id, {
+      whatsappSent: true,
+      whatsappSentAt: new Date(),
+    });
+  }
+
+  return {
+    ...result,
+    billNumber: sale.billNumber,
+    customerPhone: sale.customerPhone,
+  };
+};
+
 module.exports = {
   createSale,
   getSales,
@@ -316,4 +424,5 @@ module.exports = {
   getSaleStats,
   getSaleById,
   getSalePdfData,
+  sendWhatsAppForSale,
 };

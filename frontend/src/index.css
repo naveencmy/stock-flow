@@ -4,9 +4,35 @@
 
 @layer base {
   body {
-    @apply bg-slate-50 text-slate-900 min-h-screen antialiased;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    @apply bg-slate-50 dark:bg-[#090d16] text-slate-900 dark:text-slate-100 min-h-screen antialiased;
+    font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   }
+}
+
+/* Tabular numbers for financial precision */
+.font-tabular {
+  font-family: 'JetBrains Mono', monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Glassmorphism & Modern Elevation */
+.glass-panel {
+  @apply bg-white/80 dark:bg-[#0f172a]/80 backdrop-blur-md border border-slate-200/80 dark:border-slate-800/80 shadow-sm;
+}
+
+.glass-card {
+  @apply bg-white/90 dark:bg-[#151f32]/90 backdrop-blur-md border border-slate-200/70 dark:border-slate-800/80 shadow-sm hover:shadow-md transition-all duration-200;
+}
+
+/* Ambient glow accents */
+.glow-border-cyan {
+  border-color: rgba(6, 182, 212, 0.4);
+  box-shadow: 0 0 15px -3px rgba(6, 182, 212, 0.25);
+}
+
+.glow-border-blue {
+  border-color: rgba(59, 130, 246, 0.4);
+  box-shadow: 0 0 15px -3px rgba(59, 130, 246, 0.25);
 }
 
 /* Custom scrollbar for fast cashier browsing */
@@ -17,53 +43,86 @@
 ::-webkit-scrollbar-track {
   background: #f1f5f9;
 }
+.dark ::-webkit-scrollbar-track {
+  background: #090d16;
+}
 ::-webkit-scrollbar-thumb {
   background: #cbd5e1;
   border-radius: 4px;
 }
+.dark ::-webkit-scrollbar-thumb {
+  background: #334155;
+}
 ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
+}
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #475569;
 }
 
 /* Print CSS */
 @media print {
   @page {
     size: A4 portrait;
-    margin: 10mm;
+    margin: 8mm;
   }
 
-  body * {
-    visibility: hidden;
+  /* Reset document defaults for printing */
+  html,
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    overflow: visible !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 
-  .print-only,
-  .print-area,
-  .print-area * {
-    visibility: visible;
+  /* Hide app shell, sidebar, headers, backdrops and buttons */
+  aside,
+  header,
+  nav,
+  .no-print,
+  button,
+  [aria-hidden="true"] {
+    display: none !important;
   }
 
+  /* Unconstrain print area */
   .print-area {
-    position: absolute;
-    left: 0;
-    top: 0;
+    display: block !important;
+    position: static !important;
     width: 100% !important;
     margin: 0 !important;
     padding: 0 !important;
     box-shadow: none !important;
     border: none !important;
+    background: #ffffff !important;
   }
 
-  .no-print {
-    display: none !important;
-  }
-
+  /* Clean A4 GST Invoice Container */
   .bill-container {
     width: 100% !important;
     max-width: 100% !important;
-    padding: 10mm !important;
+    padding: 0 !important;
     margin: 0 auto !important;
-    border: 1px solid #e2e8f0 !important;
+    border: none !important;
     box-shadow: none !important;
     background: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  /* Prevent row splitting across pages */
+  tr {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  /* High contrast table borders in print */
+  table {
+    border-collapse: collapse !important;
+    width: 100% !important;
   }
 }

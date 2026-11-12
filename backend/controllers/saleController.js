@@ -69,14 +69,41 @@ const getSale = asyncHandler(async (req, res) => {
   });
 });
 
-// @desc    Get bill PDF data as JSON
+// @desc    Get bill PDF data as JSON or download vector PDF
 // @route   GET /api/sales/:id/pdf
 const getSalePdf = asyncHandler(async (req, res) => {
+  const sale = await saleService.getSaleById(req.params.id);
+
+  if (req.query.download === 'true' || req.headers.accept?.includes('application/pdf')) {
+    const { generateInvoicePdfBuffer } = require('../utils/pdfGenerator');
+    const pdfBuf = await generateInvoicePdfBuffer(sale);
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="Invoice_${sale.billNumber || 'Bill'}.pdf"`
+    );
+    return res.send(pdfBuf);
+  }
+
   const pdfData = await saleService.getSalePdfData(req.params.id);
 
   res.status(200).json({
     success: true,
     data: pdfData,
+  });
+});
+
+// @desc    Trigger WhatsApp message dispatch for a sale
+// @route   POST /api/sales/:id/whatsapp
+const sendWhatsApp = asyncHandler(async (req, res) => {
+  const result = await saleService.sendWhatsAppForSale(req.params.id);
+
+  res.status(200).json({
+    success: true,
+    data: result,
+    message: result.success
+      ? `WhatsApp invoice successfully dispatched to +91 ${result.customerPhone}`
+      : `WhatsApp message queued or requires client dispatch (${result.reason || 'see details'})`,
   });
 });
 
@@ -87,4 +114,5 @@ module.exports = {
   getSaleStats,
   getSale,
   getSalePdf,
+  sendWhatsApp,
 };

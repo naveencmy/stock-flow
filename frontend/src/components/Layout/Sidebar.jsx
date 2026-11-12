@@ -68,12 +68,12 @@ export const Sidebar = () => {
 
       {/* Sidebar container */}
       <aside
-        className={`fixed top-0 left-0 bottom-0 z-40 bg-slate-900 text-white flex flex-col transition-all duration-300 ease-in-out lg:translate-x-0 no-print border-r border-slate-800/80 shadow-xl ${
+        className={`fixed top-0 left-0 bottom-0 z-40 bg-[#090d16] text-white flex flex-col transition-all duration-300 ease-in-out lg:translate-x-0 no-print border-r border-slate-800/80 shadow-2xl ${
           isSidebarCollapsed ? 'w-20' : 'w-64'
         } ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
       >
         {/* Brand Header */}
-        <div className="h-20 flex items-center justify-between px-4 border-b border-slate-800 bg-slate-950/40 relative">
+        <div className="h-20 flex items-center justify-between px-4 border-b border-slate-800/80 bg-[#060a12]/70 relative">
           <div className="flex items-center overflow-hidden">
             <Logo collapsed={isSidebarCollapsed} size={isSidebarCollapsed ? 'sm' : 'md'} />
           </div>
@@ -92,7 +92,7 @@ export const Sidebar = () => {
           <button
             type="button"
             onClick={toggleSidebarCollapse}
-            className="hidden lg:flex absolute -right-3.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-blue-600 hover:bg-blue-500 text-white items-center justify-center shadow-md shadow-blue-900/50 border-2 border-slate-900 transition-transform duration-200 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className="hidden lg:flex absolute -right-3.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-blue-600 hover:bg-cyan-500 text-white items-center justify-center shadow-md shadow-blue-900/50 border-2 border-[#090d16] transition-all duration-200 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-cyan-400"
             title={isSidebarCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
           >
             {isSidebarCollapsed ? (
@@ -106,7 +106,7 @@ export const Sidebar = () => {
         {/* Navigation Items */}
         <div className="flex-1 py-6 px-3 space-y-1.5 overflow-y-auto overflow-x-hidden">
           {!isSidebarCollapsed && (
-            <div className="px-3 pb-2 text-[10px] font-bold uppercase tracking-wider text-slate-400 animate-fadeIn">
+            <div className="px-3 pb-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">
               Main Menu
             </div>
           )}
@@ -126,7 +126,7 @@ export const Sidebar = () => {
                         : 'justify-between px-3.5 py-3'
                     } ${
                       isActive
-                        ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30 font-semibold'
+                        ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white shadow-lg shadow-blue-500/25 font-semibold ring-1 ring-white/20'
                         : 'text-slate-300 hover:bg-slate-800/80 hover:text-white'
                     }`
                   }

@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { productService } from '../api/services';
+import { productService, categoryService } from '../api/services';
 import toast from 'react-hot-toast';
 
 export const useProducts = () => {
@@ -95,6 +95,18 @@ export const useProducts = () => {
     }
   };
 
+  const createCategory = async (name) => {
+    try {
+      const newCat = await categoryService.create({ name: name.trim() });
+      toast.success(`Category "${newCat.name}" created`);
+      await fetchCategories();
+      return newCat;
+    } catch (err) {
+      toast.error(err.response?.data?.message || err.message || 'Failed to create category');
+      throw err;
+    }
+  };
+
   return {
     products,
     total,
@@ -108,7 +120,8 @@ export const useProducts = () => {
     fetchLowStock,
     addProduct,
     editProduct,
-    removeProduct
+    removeProduct,
+    createCategory
   };
 };
 

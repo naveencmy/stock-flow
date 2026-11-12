@@ -1,7 +1,7 @@
 const Sale = require('../models/Sale');
 
 const generateBillNumber = async (session = null) => {
-  const query = Sale.findOne().sort({ createdAt: -1 });
+  const query = Sale.findOne().sort({ billNumber: -1 });
   if (session) query.session(session);
   const lastSale = await query;
   

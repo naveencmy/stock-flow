@@ -1,0 +1,20 @@
+services:
+  openwa:
+    image: openwa/wa-automate:latest
+    container_name: openwa-whatsapp-server
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      - POPUP=false
+      - HEADLESS=true
+      - MULTI_DEVICE=true
+      - USE_CHROME=true
+    volumes:
+      - openwa_data:/app/session
+
+volumes:
+  openwa_data:
+    driver: local
+

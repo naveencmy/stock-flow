@@ -63,31 +63,31 @@ export const StockLogs = () => {
       case 'sale':
         return {
           label: 'Sale Deduct',
-          bg: 'bg-red-50 text-red-700 border-red-200/60',
+          bg: 'bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-400 border-rose-200/60 dark:border-rose-800/60',
           icon: ArrowDownLeft
         };
       case 'purchase':
         return {
           label: 'Purchase / Inward',
-          bg: 'bg-emerald-50 text-emerald-700 border-emerald-200/60',
+          bg: 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border-emerald-200/60 dark:border-emerald-800/60',
           icon: ArrowUpRight
         };
       case 'adjustment':
         return {
           label: 'Adjustment',
-          bg: 'bg-amber-50 text-amber-700 border-amber-200/60',
+          bg: 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 border-amber-200/60 dark:border-amber-800/60',
           icon: SlidersHorizontal
         };
       case 'return':
         return {
           label: 'Customer Return',
-          bg: 'bg-blue-50 text-blue-700 border-blue-200/60',
+          bg: 'bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-cyan-400 border-blue-200/60 dark:border-cyan-800/60',
           icon: RotateCcw
         };
       default:
         return {
           label: type,
-          bg: 'bg-slate-100 text-slate-700 border-slate-200',
+          bg: 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700',
           icon: BarChart3
         };
     }
@@ -98,10 +98,10 @@ export const StockLogs = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
             Inventory Stock Logs
           </h1>
-          <p className="text-sm text-slate-500 mt-1">
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
             Complete audit trail of sales deductions, supplier inward entries, and inventory adjustments.
           </p>
         </div>
@@ -118,18 +118,18 @@ export const StockLogs = () => {
       </div>
 
       {/* Filter Control Card */}
-      <div className="bg-white rounded-2xl p-4 sm:p-5 shadow-xs border border-slate-200/80 flex flex-col md:flex-row items-center justify-between gap-3">
+      <div className="bg-white/90 dark:bg-[#121a2d]/90 backdrop-blur-md rounded-2xl p-4 sm:p-5 shadow-xs border border-slate-200/80 dark:border-slate-800/90 flex flex-col md:flex-row items-center justify-between gap-3 transition-colors">
         <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
           {/* Product Filter */}
           <div className="flex items-center gap-2">
-            <Filter className="w-4 h-4 text-slate-400 shrink-0" />
+            <Filter className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
             <select
               value={selectedProduct}
               onChange={(e) => {
                 setSelectedProduct(e.target.value);
                 setCurrentPage(1);
               }}
-              className="py-2 px-3 text-sm bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
+              className="py-2 px-3 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-700 dark:text-slate-200 focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50 font-medium"
             >
               <option value="All">All Products</option>
               {productsList.map((p) => (
@@ -148,7 +148,7 @@ export const StockLogs = () => {
                 setSelectedType(e.target.value);
                 setCurrentPage(1);
               }}
-              className="py-2 px-3 text-sm bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
+              className="py-2 px-3 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-700 dark:text-slate-200 focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50 font-medium"
             >
               <option value="All">All Change Types</option>
               <option value="purchase">Purchase (Inward)</option>
@@ -160,12 +160,12 @@ export const StockLogs = () => {
         </div>
 
         {/* Legend */}
-        <div className="flex items-center gap-3 text-xs text-slate-500 overflow-x-auto w-full md:w-auto justify-start md:justify-end">
+        <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400 overflow-x-auto w-full md:w-auto justify-start md:justify-end">
           <span className="flex items-center gap-1">
             <span className="w-2 h-2 rounded-full bg-emerald-500" /> Purchase
           </span>
           <span className="flex items-center gap-1">
-            <span className="w-2 h-2 rounded-full bg-red-500" /> Sale
+            <span className="w-2 h-2 rounded-full bg-rose-500" /> Sale
           </span>
           <span className="flex items-center gap-1">
             <span className="w-2 h-2 rounded-full bg-amber-500" /> Adjustment
@@ -177,21 +177,21 @@ export const StockLogs = () => {
       </div>
 
       {/* Stock Logs Table */}
-      <div className="bg-white rounded-2xl shadow-xs border border-slate-200/80 overflow-hidden relative">
+      <div className="bg-white/90 dark:bg-[#121a2d]/90 backdrop-blur-md rounded-2xl shadow-xs border border-slate-200/80 dark:border-slate-800/90 overflow-hidden relative transition-colors">
         {loading && <LoadingSpinner overlay message="Updating audit logs..." />}
 
         {logs.length === 0 && !loading ? (
-          <div className="p-12 text-center text-slate-500">
-            <BarChart3 className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-            <h3 className="text-base font-bold text-slate-700">No Stock Logs Found</h3>
-            <p className="text-xs text-slate-400 mt-1">
+          <div className="p-12 text-center text-slate-500 dark:text-slate-400">
+            <BarChart3 className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
+            <h3 className="text-base font-bold text-slate-700 dark:text-slate-200">No Stock Logs Found</h3>
+            <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
               No inventory movements recorded matching your current filter.
             </p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
-              <thead className="bg-slate-50 text-slate-500 uppercase text-[11px] font-bold tracking-wider border-b border-slate-200/80">
+              <thead className="bg-slate-50/80 dark:bg-[#151f32]/80 text-slate-500 dark:text-slate-400 uppercase text-[10px] font-bold tracking-wider border-b border-slate-200/80 dark:border-slate-800/80">
                 <tr>
                   <th className="px-5 py-3.5">Timestamp</th>
                   <th className="px-4 py-3.5">Product Name</th>
@@ -201,19 +201,19 @@ export const StockLogs = () => {
                   <th className="px-5 py-3.5">Reference / Reason</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
                 {logs.map((log) => {
                   const badge = getTypeBadge(log.changeType);
                   const Icon = badge.icon;
                   const isPositive = Number(log.changeQty) > 0;
 
                   return (
-                    <tr key={log._id} className="hover:bg-slate-50/80 transition-colors">
-                      <td className="px-5 py-3.5 text-xs text-slate-600 font-mono">
+                    <tr key={log._id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
+                      <td className="px-5 py-3.5 text-xs text-slate-600 dark:text-slate-400 font-mono">
                         {formatDateTime(log.createdAt)}
                       </td>
 
-                      <td className="px-4 py-3.5 font-semibold text-slate-900">
+                      <td className="px-4 py-3.5 font-semibold text-slate-900 dark:text-white">
                         {log.productName}
                       </td>
 
@@ -226,25 +226,25 @@ export const StockLogs = () => {
                         </span>
                       </td>
 
-                      <td className="px-4 py-3.5 text-center font-mono font-bold">
+                      <td className="px-4 py-3.5 text-center font-tabular font-bold">
                         <span
                           className={
                             isPositive
-                              ? 'text-emerald-600'
-                              : 'text-red-600'
+                              ? 'text-emerald-600 dark:text-emerald-400'
+                              : 'text-rose-600 dark:text-rose-400'
                           }
                         >
                           {isPositive ? `+${log.changeQty}` : log.changeQty}
                         </span>
                       </td>
 
-                      <td className="px-4 py-3.5 text-center font-bold text-slate-800 font-mono">
+                      <td className="px-4 py-3.5 text-center font-bold font-tabular text-slate-800 dark:text-slate-200">
                         {log.balanceQty}
                       </td>
 
-                      <td className="px-5 py-3.5 text-xs text-slate-500">
+                      <td className="px-5 py-3.5 text-xs text-slate-500 dark:text-slate-400">
                         {log.reference && (
-                          <span className="font-semibold text-slate-700 block">
+                          <span className="font-semibold text-slate-700 dark:text-slate-300 block">
                             Ref: {log.reference}
                           </span>
                         )}
@@ -259,10 +259,10 @@ export const StockLogs = () => {
         )}
 
         {/* Pagination */}
-        <div className="p-4 bg-slate-50 border-t border-slate-200/80 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-600">
+        <div className="p-4 bg-slate-50/80 dark:bg-[#151f32]/60 border-t border-slate-200/80 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-600 dark:text-slate-400">
           <div>
-            Showing <span className="font-semibold text-slate-900">{logs.length}</span> of{' '}
-            <span className="font-semibold text-slate-900">{total}</span> log events
+            Showing <span className="font-semibold font-tabular text-slate-900 dark:text-white">{logs.length}</span> of{' '}
+            <span className="font-semibold font-tabular text-slate-900 dark:text-white">{total}</span> log events
           </div>
 
           <div className="flex items-center gap-2">
@@ -275,7 +275,7 @@ export const StockLogs = () => {
             >
               Previous
             </Button>
-            <span className="px-3 py-1.5 rounded-lg bg-white border border-slate-200 font-bold text-slate-800">
+            <span className="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-bold font-tabular text-slate-800 dark:text-slate-200">
               Page {currentPage} of {totalPages || 1}
             </span>
             <Button

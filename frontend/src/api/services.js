@@ -118,6 +118,15 @@ export const salesService = {
   async create(data) {
     const res = await api.post('/sales', data);
     return res.data?.data !== undefined ? res.data.data : res.data;
+  },
+
+  /**
+   * Trigger server-side WhatsApp dispatch for a sale
+   * @param {string} id - Sale ObjectId
+   */
+  async sendWhatsApp(id) {
+    const res = await api.post(`/sales/${id}/whatsapp`);
+    return res.data?.data !== undefined ? res.data.data : res.data;
   }
 };
 
@@ -178,5 +187,68 @@ export const stockLogService = {
   async adjust(data) {
     const res = await api.post('/stock-logs/adjust', data);
     return res.data?.data !== undefined ? res.data.data : res.data;
+  }
+};
+
+export const categoryService = {
+  /**
+   * Fetch all categories
+   */
+  async getAll() {
+    const res = await api.get('/categories');
+    return res.data?.data !== undefined ? res.data.data : res.data;
+  },
+
+  /**
+   * Create a new category
+   * @param {Object} data - { name, description }
+   */
+  async create(data) {
+    const res = await api.post('/categories', data);
+    return res.data?.data !== undefined ? res.data.data : res.data;
+  },
+
+  /**
+   * Update category
+   */
+  async update(id, data) {
+    const res = await api.put(`/categories/${id}`, data);
+    return res.data?.data !== undefined ? res.data.data : res.data;
+  },
+
+  /**
+   * Delete category
+   */
+  async delete(id) {
+    const res = await api.delete(`/categories/${id}`);
+    return res.data?.data !== undefined ? res.data.data : res.data;
+  }
+};
+
+export const whatsappService = {
+  /**
+   * Get WhatsApp integration & Open-WA server connectivity status
+   */
+  async getStatus() {
+    const res = await api.get('/whatsapp/status');
+    return res.data?.data !== undefined ? res.data.data : res.data;
+  },
+
+  /**
+   * Send test message via Open-WA
+   * @param {Object} data - { phone, message }
+   */
+  async sendTest(data) {
+    const res = await api.post('/whatsapp/test', data);
+    return res.data;
+  },
+
+  /**
+   * Dispatch bill via Open-WA
+   * @param {string} saleId - Sale ObjectId
+   */
+  async sendBill(saleId) {
+    const res = await api.post(`/whatsapp/send-bill/${saleId}`);
+    return res.data;
   }
 };

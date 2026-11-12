@@ -66,13 +66,13 @@ export const SalesHistory = () => {
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 no-print">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-            Sales & Billing History
+          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+            Sales Ledger
           </h1>
-          <p className="text-sm text-slate-500 mt-1">
-            Search invoices, filter by date, inspect customer transactions, and reprint bills.
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+            Complete transaction register, historical invoices, and tax receipts.
           </p>
         </div>
 
@@ -88,11 +88,11 @@ export const SalesHistory = () => {
       </div>
 
       {/* Filter and Date Range Control Bar */}
-      <div className="bg-white rounded-2xl p-4 sm:p-5 shadow-xs border border-slate-200/80 space-y-3">
+      <div className="bg-white/90 dark:bg-[#121a2d]/90 backdrop-blur-md rounded-2xl p-4 sm:p-5 shadow-xs border border-slate-200/80 dark:border-slate-800/90 space-y-3 transition-colors no-print">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
           {/* Search Box (5 cols) */}
           <div className="md:col-span-5 relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
               <Search className="w-4 h-4" />
             </div>
             <input
@@ -103,7 +103,7 @@ export const SalesHistory = () => {
                 setCurrentPage(1);
               }}
               placeholder="Search by Bill #, Customer name, Phone..."
-              className="w-full pl-9 pr-8 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full pl-10 pr-8 py-2 text-sm bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-700 rounded-xl focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500"
             />
             {search && (
               <button
@@ -112,7 +112,7 @@ export const SalesHistory = () => {
                   setSearch('');
                   setCurrentPage(1);
                 }}
-                className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600"
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -122,7 +122,7 @@ export const SalesHistory = () => {
           {/* From Date (3 cols) */}
           <div className="md:col-span-3">
             <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
                 <Calendar className="w-4 h-4" />
               </div>
               <input
@@ -132,7 +132,7 @@ export const SalesHistory = () => {
                   setFromDate(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="w-full pl-9 pr-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full pl-10 pr-3 py-2 text-sm bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-700 dark:text-slate-200 focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
                 placeholder="From Date"
               />
             </div>
@@ -141,7 +141,7 @@ export const SalesHistory = () => {
           {/* To Date (3 cols) */}
           <div className="md:col-span-3">
             <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
                 <Calendar className="w-4 h-4" />
               </div>
               <input
@@ -151,53 +151,53 @@ export const SalesHistory = () => {
                   setToDate(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="w-full pl-9 pr-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full pl-10 pr-3 py-2 text-sm bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-700 dark:text-slate-200 focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
                 placeholder="To Date"
               />
             </div>
           </div>
 
           {/* Clear Filters (1 col) */}
-          {(search || fromDate || toDate) && (
-            <div className="md:col-span-1 flex justify-end">
+          <div className="md:col-span-1 flex justify-end">
+            {(search || fromDate || toDate) && (
               <button
                 type="button"
                 onClick={handleClearFilters}
-                className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors"
-                title="Reset all filters"
+                className="p-2 rounded-xl text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors w-full flex items-center justify-center"
+                title="Clear all filters"
               >
                 <X className="w-5 h-5" />
               </button>
-            </div>
-          )}
+            )}
+          </div>
         </div>
 
         {/* Quick Date Presets */}
-        <div className="flex items-center gap-2 pt-1 overflow-x-auto text-xs">
-          <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mr-1">
-            Presets:
+        <div className="flex items-center gap-2 pt-1 border-t border-slate-100 dark:border-slate-800 text-xs">
+          <span className="text-slate-400 dark:text-slate-500 font-semibold uppercase text-[10px] mr-1">
+            Quick Filter:
           </span>
           {[
+            { id: 'all', label: 'All History' },
             { id: 'today', label: 'Today' },
-            { id: 'week', label: 'Last 7 Days' },
-            { id: 'month', label: 'This Month' },
-            { id: 'all', label: 'All Time' }
-          ].map((item) => (
+            { id: 'week', label: 'Past 7 Days' },
+            { id: 'month', label: 'This Month' }
+          ].map((preset) => (
             <button
-              key={item.id}
+              key={preset.id}
               type="button"
-              onClick={() => handleSetQuickDate(item.id)}
-              className="px-3 py-1 bg-slate-100 text-slate-600 hover:bg-slate-200 rounded-lg font-medium transition-colors whitespace-nowrap"
+              onClick={() => handleSetQuickDate(preset.id)}
+              className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 font-medium transition-colors"
             >
-              {item.label}
+              {preset.label}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Sales Table Section */}
-      <div className="relative">
-        {loading && <LoadingSpinner overlay message="Loading sales history..." />}
+      {/* Sales Table with Loader */}
+      <div className="relative no-print">
+        {loading && <LoadingSpinner overlay message="Retrieving transactions..." />}
         <SalesTable
           sales={sales}
           loading={loading}
@@ -210,7 +210,7 @@ export const SalesHistory = () => {
         />
       </div>
 
-      {/* View Detail Modal */}
+      {/* Sale Detail Modal */}
       <SaleDetailModal
         isOpen={Boolean(viewingSale)}
         onClose={() => setViewingSale(null)}
@@ -218,7 +218,7 @@ export const SalesHistory = () => {
         onPrint={(sale) => setPrintingSale(sale)}
       />
 
-      {/* Printable Invoice Modal */}
+      {/* Full Tax Bill Print & Download Modal */}
       <BillPreview
         isOpen={Boolean(printingSale)}
         onClose={() => setPrintingSale(null)}

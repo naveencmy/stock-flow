@@ -18,7 +18,8 @@ export const Products = () => {
     fetchCategories,
     addProduct,
     editProduct,
-    removeProduct
+    removeProduct,
+    createCategory
   } = useProducts();
 
   const [search, setSearch] = useState('');
@@ -112,10 +113,10 @@ export const Products = () => {
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
             Inventory & Products
           </h1>
-          <p className="text-sm text-slate-500 mt-1">
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
             Manage stock catalog, price lists, barcodes, and reorder levels.
           </p>
         </div>
@@ -158,6 +159,7 @@ export const Products = () => {
         <ProductForm
           initialData={editingProduct}
           categories={categories}
+          onCreateCategory={createCategory}
           onSubmit={handleFormSubmit}
           onCancel={() => setIsFormModalOpen(false)}
           loading={actionLoading}

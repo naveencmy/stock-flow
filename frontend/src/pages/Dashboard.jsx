@@ -5,7 +5,10 @@ import {
   TrendingUp,
   CreditCard,
   Plus,
-  RefreshCw
+  RefreshCw,
+  Sparkles,
+  ShieldCheck,
+  Zap
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useDashboard } from '../hooks/useDashboard';
@@ -48,11 +51,17 @@ export const Dashboard = () => {
       {/* Top Banner & Quick Controls */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight font-sans">
-            Store Dashboard
-          </h1>
-          <p className="text-sm text-slate-500 mt-1">
-            Welcome back, Kuppusamy! Here is today's overview of stock and sales.
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight font-sans">
+              Store Dashboard
+            </h1>
+            <span className="hidden sm:inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-cyan-400 border border-blue-200 dark:border-cyan-800 text-xs font-bold font-mono">
+              <Zap className="w-3 h-3 fill-current" />
+              v0.1 POS
+            </span>
+          </div>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+            Welcome back, <span className="font-semibold text-slate-700 dark:text-slate-200">Kuppusamy</span>! Here is today's overview of stock and sales.
           </p>
         </div>
 
@@ -78,12 +87,12 @@ export const Dashboard = () => {
       </div>
 
       {loading && !summary.totalProducts ? (
-        <div className="py-20">
+        <div className="py-24">
           <LoadingSpinner size="lg" message="Loading store analytics..." />
         </div>
       ) : (
         <>
-          {/* Stat Cards Grid */}
+          {/* Bento Grid: Stat Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
             <StatCard
               title="Total Products"
@@ -103,23 +112,23 @@ export const Dashboard = () => {
             <StatCard
               title="Today's Sales"
               value={formatCurrency(summary.todayRevenue || 0)}
-              subtitle={`${summary.todayBillsCount || 0} bills generated`}
+              subtitle={`${summary.todayBillsCount || 0} bills generated today`}
               icon={CreditCard}
               color="emerald"
             />
             <StatCard
               title="Monthly Turnover"
-              value={formatCurrency(summary.monthlyRevenue || 124500)}
-              subtitle={`${summary.monthlyBillsCount || 68} bills this month`}
+              value={formatCurrency(summary.monthlyRevenue ?? 0)}
+              subtitle={`${summary.monthlyBillsCount ?? 0} bills this month`}
               icon={TrendingUp}
               color="purple"
             />
           </div>
 
-          {/* 30-Day Revenue Chart */}
+          {/* 30-Day Revenue Dynamics Chart */}
           <RevenueChart data={revenueChart} />
 
-          {/* Low Stock Alerts Section */}
+          {/* Low Stock Attention Radar Section */}
           <LowStockAlert
             products={lowStockProducts}
             onRestockClick={handleRestockClick}

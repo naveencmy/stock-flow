@@ -15,6 +15,7 @@ const categoryRoutes = require('./routes/categoryRoutes');
 const saleRoutes = require('./routes/saleRoutes');
 const stockLogRoutes = require('./routes/stockLogRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
+const whatsappRoutes = require('./routes/whatsappRoutes');
 
 // Connect to MongoDB
 connectDB();
@@ -36,6 +37,7 @@ app.use('/api/categories', categoryRoutes);
 app.use('/api/sales', saleRoutes);
 app.use('/api/stock-logs', stockLogRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/whatsapp', whatsappRoutes);
 
 // ─── Health Check ────────────────────────────────────────────────────────────
 app.get('/api/health', (req, res) => {

@@ -67,7 +67,7 @@ const getDashboardSummary = async () => {
  */
 const getRevenueChart = async () => {
   const thirtyDaysAgo = new Date();
-  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 29);
   thirtyDaysAgo.setHours(0, 0, 0, 0);
 
   const data = await Sale.aggregate([
@@ -76,15 +76,36 @@ const getRevenueChart = async () => {
       $group: {
         _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
         revenue: { $sum: '$grandTotal' },
+        bills: { $sum: 1 },
       },
     },
     { $sort: { _id: 1 } },
   ]);
 
-  const chartData = data.map((item) => ({
-    date: item._id,
-    revenue: item.revenue,
-  }));
+  const salesMap = {};
+  data.forEach((item) => {
+    salesMap[item._id] = {
+      revenue: Math.round(item.revenue),
+      bills: item.bills,
+    };
+  });
+
+  // Always generate a continuous 30-day timeline
+  const chartData = [];
+  const now = new Date();
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date(now);
+    d.setDate(d.getDate() - i);
+    const dateKey = d.toISOString().split('T')[0];
+    const dayLabel = d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
+
+    chartData.push({
+      date: dayLabel,
+      fullDate: dateKey,
+      revenue: salesMap[dateKey]?.revenue || 0,
+      bills: salesMap[dateKey]?.bills || 0,
+    });
+  }
 
   return chartData;
 };

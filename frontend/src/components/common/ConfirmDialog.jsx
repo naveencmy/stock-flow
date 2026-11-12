@@ -44,8 +44,8 @@ export const ConfirmDialog = ({
           <AlertTriangle className="w-6 h-6" />
         </div>
         <div>
-          <h4 className="text-base font-semibold text-slate-900">{title}</h4>
-          <p className="mt-1.5 text-sm text-slate-600 leading-relaxed">{message}</p>
+          <h4 className="text-base font-semibold text-slate-900 dark:text-white">{title}</h4>
+          <p className="mt-1.5 text-sm text-slate-600 dark:text-slate-300 leading-relaxed">{message}</p>
         </div>
       </div>
     </Modal>
