@@ -7,6 +7,29 @@ const productSchema = new mongoose.Schema({
     trim: true,
     maxlength: [100, 'Max 100 chars']
   },
+  tamilName: {
+    type: String,
+    trim: true,
+    maxlength: [150, 'Max 150 chars'],
+    default: ''
+  },
+  sku: {
+    type: String,
+    trim: true,
+    uppercase: true,
+    maxlength: [30, 'Max 30 chars']
+  },
+  rackLocation: {
+    type: String,
+    trim: true,
+    uppercase: true,
+    default: 'RACK A-01'
+  },
+  packagingConversion: {
+    type: String,
+    trim: true,
+    default: '1 Unit = 1 Pc'
+  },
   category: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Category',
@@ -20,8 +43,13 @@ const productSchema = new mongoose.Schema({
   },
   unit: {
     type: String,
-    enum: ['piece', 'meter', 'box', 'coil', 'kg', 'set'],
+    enum: ['piece', 'meter', 'box', 'coil', 'kg', 'set', 'bag', 'length', 'unit', 'coils', 'pcs', 'boxes'],
     default: 'piece'
+  },
+  purchasePrice: {
+    type: Number,
+    min: [0, 'Cannot be negative'],
+    default: 0
   },
   unitPrice: {
     type: Number,
@@ -31,6 +59,11 @@ const productSchema = new mongoose.Schema({
       validator: v => v === Math.round(v * 100) / 100,
       message: 'Max 2 decimal places'
     }
+  },
+  hsnCode: {
+    type: String,
+    trim: true,
+    default: '8544'
   },
   stockQty: {
     type: Number,

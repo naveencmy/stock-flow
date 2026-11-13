@@ -11,20 +11,24 @@ const seedCategories = [
     description: 'Single-core, multi-core, and armoured electrical cables and house wiring.'
   },
   {
-    name: 'Switches & Sockets',
-    description: 'Modular switches, power sockets, plugs, and cover plates.'
+    name: 'Switchgear',
+    description: 'Modular switches, MCBs, isolators, RCCBs, and distribution boards.'
   },
   {
-    name: 'Lights & Bulbs',
-    description: 'Energy-saving LED bulbs, battens, ceiling downlights, and outdoor fixtures.'
+    name: 'Fans & Lighting',
+    description: 'BLDC ceiling fans, LED battens, street lights, and downlights.'
   },
   {
-    name: 'MCB & Distribution',
-    description: 'Miniature circuit breakers, isolators, RCCBs, and distribution boards.'
+    name: 'Plumbing',
+    description: 'CPVC pipes, fittings, brass ball valves, solvent cements.'
+  },
+  {
+    name: 'Fasteners',
+    description: 'SS 304 screws, anchor bolts, hex nuts, washers, and rawl plugs.'
   },
   {
     name: 'Tools & Accessories',
-    description: 'Electrical tape, testers, ceiling roses, and installation supplies.'
+    description: 'Insulation tapes, testers, wire strippers, and installation supplies.'
   }
 ];
 
@@ -50,314 +54,492 @@ const seedData = async () => {
       categoryMap[cat.name] = cat._id;
     });
 
-    console.log('Seeding products...');
+    console.log('Seeding products with bilingual names & rack locations...');
     const productsData = [
       {
-        name: 'Finolex 1.5mm Wire',
+        name: 'Finolex 1.5 Sq.mm FR Copper Wire (Red)',
+        tamilName: 'பினோலெக்ஸ் 1.5 மிமீ காப்பர் ஒயர் (சிவப்பு)',
+        sku: 'FIN-WIR-1.5-RD',
+        rackLocation: 'RACK E-03',
+        packagingConversion: '1 Coil = 90 meters',
         category: categoryMap['Wires & Cables'],
         brand: 'Finolex',
         unit: 'coil',
-        unitPrice: 1850.00,
-        stockQty: 25,
-        reorderLevel: 10,
+        purchasePrice: 1180.00,
+        unitPrice: 1450.00,
+        stockQty: 14,
+        reorderLevel: 5,
         gstRate: 18,
+        hsnCode: '8544',
         barcode: '890123400001',
         isActive: true
       },
       {
-        name: 'Havells 20W LED',
-        category: categoryMap['Lights & Bulbs'],
-        brand: 'Havells',
+        name: 'Schneider 16A SP MCB C-Curve',
+        tamilName: 'ஷ்னைடர் 16A எம்.சி.பி சுவிட்ச் (சி-கர்வு)',
+        sku: 'SCH-MCB-16A',
+        rackLocation: 'RACK S-02',
+        packagingConversion: '1 Box = 12 Pieces',
+        category: categoryMap['Switchgear'],
+        brand: 'Schneider',
         unit: 'piece',
-        unitPrice: 320.00,
-        stockQty: 3, // LOW STOCK (<= reorderLevel 8)
-        reorderLevel: 8,
+        purchasePrice: 142.00,
+        unitPrice: 182.00,
+        stockQty: 4, // CRITICAL LOW STOCK
+        reorderLevel: 20,
         gstRate: 18,
+        hsnCode: '8536',
         barcode: '890123400002',
         isActive: true
       },
       {
-        name: 'Legrand 32A MCB',
-        category: categoryMap['MCB & Distribution'],
-        brand: 'Legrand',
-        unit: 'piece',
-        unitPrice: 460.00,
-        stockQty: 18,
-        reorderLevel: 5,
+        name: 'Crompton 28W BLDC Fan 1200mm Brown',
+        tamilName: 'கிராம்டன் 28W BLDC மின்விசிறி (பிரவுன்)',
+        sku: 'CRM-FAN-BLDC-28W',
+        rackLocation: 'LOFT-F01',
+        packagingConversion: '1 Box = 1 Complete Set',
+        category: categoryMap['Fans & Lighting'],
+        brand: 'Crompton',
+        unit: 'unit',
+        purchasePrice: 2350.00,
+        unitPrice: 2850.00,
+        stockQty: 12,
+        reorderLevel: 4,
         gstRate: 18,
+        hsnCode: '8414',
         barcode: '890123400003',
         isActive: true
       },
       {
-        name: 'Anchor Roma 6A Switch',
-        category: categoryMap['Switches & Sockets'],
-        brand: 'Anchor',
-        unit: 'box',
-        unitPrice: 420.00,
-        stockQty: 12,
-        reorderLevel: 5,
+        name: 'Supreme 1" Brass-Core PVC Ball Valve',
+        tamilName: 'சுப்ரீம் 1 அங்குல பித்தளை பால் வால்வு',
+        sku: 'SUP-VAL-BAL-1IN',
+        rackLocation: 'BIN P-14',
+        packagingConversion: '1 Bag = 25 Pcs',
+        category: categoryMap['Plumbing'],
+        brand: 'Supreme',
+        unit: 'piece',
+        purchasePrice: 145.00,
+        unitPrice: 185.00,
+        stockQty: 3, // CRITICAL LOW STOCK
+        reorderLevel: 25,
         gstRate: 18,
+        hsnCode: '8481',
         barcode: '890123400004',
         isActive: true
       },
       {
-        name: 'Polycab 2.5mm Wire',
-        category: categoryMap['Wires & Cables'],
-        brand: 'Polycab',
-        unit: 'coil',
-        unitPrice: 2950.00,
-        stockQty: 4, // LOW STOCK (<= reorderLevel 8)
-        reorderLevel: 8,
+        name: 'SS 304 Star Head Wood Screws 1.5" x 8',
+        tamilName: 'எஸ்.எஸ் 304 ஸ்டார் மர திருகுகள் 1.5 அங்குலம்',
+        sku: 'SCR-SS-1.5X8',
+        rackLocation: 'DRAWER H-04',
+        packagingConversion: '1 Box = 100 Pcs (3,500 Pcs total)',
+        category: categoryMap['Fasteners'],
+        brand: 'FastenFit',
+        unit: 'box',
+        purchasePrice: 72.00,
+        unitPrice: 95.00,
+        stockQty: 35,
+        reorderLevel: 10,
         gstRate: 18,
+        hsnCode: '7318',
         barcode: '890123400005',
         isActive: true
       },
       {
-        name: 'Philips 9W LED Tube',
-        category: categoryMap['Lights & Bulbs'],
-        brand: 'Philips',
+        name: 'GM 6A Modular Switch 1-Way (White)',
+        tamilName: 'ஜி.எம் 6A மாடுலர் சுவிட்ச் (வெள்ளை)',
+        sku: 'GM-MOD-SW-6A',
+        rackLocation: 'RACK G-01',
+        packagingConversion: '1 Box = 20 Pcs',
+        category: categoryMap['Switchgear'],
+        brand: 'GM',
         unit: 'piece',
-        unitPrice: 210.00,
-        stockQty: 30,
-        reorderLevel: 10,
+        purchasePrice: 24.00,
+        unitPrice: 34.00,
+        stockQty: 120,
+        reorderLevel: 30,
         gstRate: 18,
+        hsnCode: '8536',
         barcode: '890123400006',
         isActive: true
       },
       {
-        name: 'Havells 16A Socket',
-        category: categoryMap['Switches & Sockets'],
-        brand: 'Havells',
+        name: 'Astral 3/4" CPVC Hot/Cold Pipe (3m)',
+        tamilName: 'ஆஸ்ட்ரல் 3/4 அங்குல சிபிவிசி பைப் (3 மீ)',
+        sku: 'AST-CPVC-075-3M',
+        rackLocation: 'RACK PIPE-02',
+        packagingConversion: '1 Bundle = 10 Pcs',
+        category: categoryMap['Plumbing'],
+        brand: 'Astral',
         unit: 'piece',
-        unitPrice: 145.00,
-        stockQty: 40,
+        purchasePrice: 215.00,
+        unitPrice: 275.00,
+        stockQty: 45,
         reorderLevel: 15,
         gstRate: 18,
+        hsnCode: '3917',
         barcode: '890123400007',
         isActive: true
       },
       {
-        name: 'Finolex 4mm Wire',
+        name: 'Finolex 2.5 Sq.mm FR Copper Wire (Blue)',
+        tamilName: 'பினோலெக்ஸ் 2.5 மிமீ காப்பர் ஒயர் (நீலம்)',
+        sku: 'FIN-WIR-2.5-BL',
+        rackLocation: 'RACK E-04',
+        packagingConversion: '1 Coil = 90 meters',
         category: categoryMap['Wires & Cables'],
         brand: 'Finolex',
         unit: 'coil',
-        unitPrice: 4600.00,
-        stockQty: 2, // LOW STOCK (<= reorderLevel 5)
+        purchasePrice: 1950.00,
+        unitPrice: 2450.00,
+        stockQty: 8,
         reorderLevel: 5,
         gstRate: 18,
+        hsnCode: '8544',
         barcode: '890123400008',
         isActive: true
       },
       {
-        name: 'Legrand 20A DP MCB',
-        category: categoryMap['MCB & Distribution'],
-        brand: 'Legrand',
-        unit: 'piece',
-        unitPrice: 580.00,
-        stockQty: 14,
-        reorderLevel: 6,
-        gstRate: 18,
+        name: 'Solar Street Light 20W All-in-One',
+        tamilName: 'சூரிய சக்தி தெரு விளக்கு 20W',
+        sku: 'SOL-LGT-20W',
+        rackLocation: 'LOFT-L02',
+        packagingConversion: '1 Unit = 1 Box with Solar Panel',
+        category: categoryMap['Fans & Lighting'],
+        brand: 'Havells',
+        unit: 'unit',
+        purchasePrice: 1950.00,
+        unitPrice: 2400.00,
+        stockQty: 6,
+        reorderLevel: 2,
+        gstRate: 5,
+        hsnCode: '9405',
         barcode: '890123400009',
         isActive: true
       },
       {
-        name: 'GM 6A Modular Switch',
-        category: categoryMap['Switches & Sockets'],
-        brand: 'GM',
-        unit: 'box',
-        unitPrice: 380.00,
-        stockQty: 20,
-        reorderLevel: 6,
-        gstRate: 18,
-        barcode: '890123400010',
-        isActive: true
-      },
-      {
-        name: 'Polycab Ceiling Rose',
+        name: 'Steelgrip PVC Electrical Insulation Tape',
+        tamilName: 'ஸ்டீல்கிரிப் பிவிசி இன்சுலேஷன் டேப்',
+        sku: 'STG-TAPE-PVC',
+        rackLocation: 'COUNTER-B01',
+        packagingConversion: '1 Box = 30 Rolls',
         category: categoryMap['Tools & Accessories'],
-        brand: 'Polycab',
+        brand: 'Steelgrip',
         unit: 'piece',
-        unitPrice: 38.00,
-        stockQty: 60,
-        reorderLevel: 20,
+        purchasePrice: 10.00,
+        unitPrice: 15.00,
+        stockQty: 180,
+        reorderLevel: 50,
         gstRate: 18,
-        barcode: '890123400011',
-        isActive: true
-      },
-      {
-        name: 'Havells 40W LED Flood Light',
-        category: categoryMap['Lights & Bulbs'],
-        brand: 'Havells',
-        unit: 'piece',
-        unitPrice: 1650.00,
-        stockQty: 1, // LOW STOCK (<= reorderLevel 4)
-        reorderLevel: 4,
-        gstRate: 18,
-        barcode: '890123400012',
-        isActive: true
-      },
-      {
-        name: 'Anchor 3-Pin Plug',
-        category: categoryMap['Switches & Sockets'],
-        brand: 'Anchor',
-        unit: 'piece',
-        unitPrice: 65.00,
-        stockQty: 45,
-        reorderLevel: 15,
-        gstRate: 18,
-        barcode: '890123400013',
-        isActive: true
-      },
-      {
-        name: 'Finolex 6mm Wire',
-        category: categoryMap['Wires & Cables'],
-        brand: 'Finolex',
-        unit: 'coil',
-        unitPrice: 6800.00,
-        stockQty: 6,
-        reorderLevel: 3,
-        gstRate: 18,
-        barcode: '890123400014',
-        isActive: true
-      },
-      {
-        name: 'Havells 25A RCCB',
-        category: categoryMap['MCB & Distribution'],
-        brand: 'Havells',
-        unit: 'piece',
-        unitPrice: 1950.00,
-        stockQty: 8,
-        reorderLevel: 3,
-        gstRate: 18,
-        barcode: '890123400015',
+        hsnCode: '3919',
+        barcode: '890123400010',
         isActive: true
       }
     ];
 
     const createdProducts = await Product.insertMany(productsData);
-
-    console.log('Generating initial stock audit logs for inventory...');
-    const initialLogs = createdProducts.map((p) => ({
-      product: p._id,
-      productName: p.name,
-      changeType: 'purchase',
-      qtyChange: p.stockQty,
-      prevStock: 0,
-      newStock: p.stockQty,
-      referenceId: 'INIT-AUDIT',
-      note: 'Initial inventory seeding'
-    }));
-    await StockLog.insertMany(initialLogs);
-
-    console.log('Generating realistic sales history for the last 30 days...');
-    const customerNames = [
-      'Kuppusamy Electrician',
-      'Muthusamy K',
-      'Venkatesh Construction',
-      'Senthil Kumar',
-      'Ravi Electricals',
-      'Praveen Kumar',
-      'Anand Building Works',
-      'Karthik & Sons',
-      'Walk-in Customer'
-    ];
-    const customerPhones = [
-      '9876543210',
-      '9443211234',
-      '9894000123',
-      '9123456789',
-      '9789012345'
-    ];
-    const paymentMethods = ['cash', 'upi', 'card'];
-
-    const salableProducts = createdProducts.filter(p => p.stockQty > p.reorderLevel);
-    const seedSales = [];
-    const saleLogs = [];
-    let billCounter = 1;
-
-    const now = new Date();
-    for (let dayOffset = 29; dayOffset >= 0; dayOffset--) {
-      const salesCount = dayOffset === 0 ? 2 : (dayOffset % 7 === 0 || dayOffset % 7 === 6 ? 3 : (dayOffset % 2 === 0 ? 2 : 1));
-
-      for (let s = 0; s < salesCount; s++) {
-        const saleDate = new Date(now.getTime() - dayOffset * 86400000);
-        saleDate.setHours(9 + s * 4, (s * 23) % 60, 0, 0);
-
-        const numItems = (billCounter % 2) + 1;
-        const selectedItems = [];
-        let subTotal = 0;
-        let totalGst = 0;
-
-        for (let i = 0; i < numItems; i++) {
-          const prod = salableProducts[(billCounter + i) % salableProducts.length];
-          const qty = (billCounter % 2) + 1;
-          const lineTotal = qty * prod.unitPrice;
-          const gstAmount = Math.round((lineTotal * (prod.gstRate / 100)) * 100) / 100;
-
-          subTotal += lineTotal;
-          totalGst += gstAmount;
-
-          selectedItems.push({
-            product: prod._id,
-            productName: prod.name,
-            quantity: qty,
-            unitPrice: prod.unitPrice,
-            gstRate: prod.gstRate,
-            lineTotal: lineTotal
-          });
-        }
-
-        const calculatedTotal = subTotal + totalGst;
-        const discountAmt = (billCounter % 5 === 0 && calculatedTotal > 100) ? 50 : 0;
-        const grandTotal = Math.max(0, Math.round(calculatedTotal - discountAmt));
-        const billNumber = `B-${String(billCounter).padStart(5, '0')}`;
-        const custName = customerNames[billCounter % customerNames.length];
-        const custPhone = custName === 'Walk-in Customer' ? null : customerPhones[billCounter % customerPhones.length];
-        const payMethod = paymentMethods[billCounter % paymentMethods.length];
-
-        seedSales.push({
-          billNumber,
-          customerName: custName,
-          customerPhone: custPhone,
-          items: selectedItems,
-          subTotal: Math.round(subTotal),
-          totalGst: Math.round(totalGst),
-          discountAmt,
-          grandTotal,
-          paymentMethod: payMethod,
-          createdAt: saleDate,
-          updatedAt: saleDate
-        });
-        billCounter++;
-      }
-    }
-
-    const createdSales = await Sale.insertMany(seedSales);
-
-    createdSales.forEach(sale => {
-      sale.items.forEach(item => {
-        saleLogs.push({
-          product: item.product,
-          productName: item.productName,
-          changeType: 'sale',
-          qtyChange: -item.quantity,
-          prevStock: 30,
-          newStock: 30 - item.quantity,
-          referenceId: sale._id.toString(),
-          note: `Sale invoice ${sale.billNumber}`,
-          createdAt: sale.createdAt
-        });
-      });
+    const prodMap = {};
+    createdProducts.forEach((p) => {
+      prodMap[p.sku] = p;
     });
-    if (saleLogs.length > 0) {
-      await StockLog.insertMany(saleLogs);
-    }
+
+    console.log('Seeding sales ledger matching terminal emulator...');
+    const now = new Date();
+
+    const sampleSales = [
+      {
+        billNumber: '#INV-2026-0843',
+        customerName: 'Senthil Contractor (செந்தில்)',
+        customerPhone: '9443188210',
+        customerGstin: '33AAAAB0000A1Z5',
+        items: [
+          {
+            product: prodMap['FIN-WIR-1.5-RD']._id,
+            productName: prodMap['FIN-WIR-1.5-RD'].name,
+            tamilName: prodMap['FIN-WIR-1.5-RD'].tamilName,
+            sku: prodMap['FIN-WIR-1.5-RD'].sku,
+            rackLocation: prodMap['FIN-WIR-1.5-RD'].rackLocation,
+            unit: 'coil',
+            quantity: 1,
+            unitPrice: 1450.00,
+            gstRate: 18,
+            lineTotal: 1450.00
+          },
+          {
+            product: prodMap['SUP-VAL-BAL-1IN']._id,
+            productName: prodMap['SUP-VAL-BAL-1IN'].name,
+            tamilName: prodMap['SUP-VAL-BAL-1IN'].tamilName,
+            sku: prodMap['SUP-VAL-BAL-1IN'].sku,
+            rackLocation: prodMap['SUP-VAL-BAL-1IN'].rackLocation,
+            unit: 'piece',
+            quantity: 2,
+            unitPrice: 185.00,
+            gstRate: 18,
+            lineTotal: 370.00
+          },
+          {
+            product: prodMap['GM-MOD-SW-6A']._id,
+            productName: prodMap['GM-MOD-SW-6A'].name,
+            tamilName: prodMap['GM-MOD-SW-6A'].tamilName,
+            sku: prodMap['GM-MOD-SW-6A'].sku,
+            rackLocation: prodMap['GM-MOD-SW-6A'].rackLocation,
+            unit: 'piece',
+            quantity: 4,
+            unitPrice: 34.00,
+            gstRate: 18,
+            lineTotal: 136.00
+          },
+          {
+            product: prodMap['AST-CPVC-075-3M']._id,
+            productName: prodMap['AST-CPVC-075-3M'].name,
+            tamilName: prodMap['AST-CPVC-075-3M'].tamilName,
+            sku: prodMap['AST-CPVC-075-3M'].sku,
+            rackLocation: prodMap['AST-CPVC-075-3M'].rackLocation,
+            unit: 'piece',
+            quantity: 2,
+            unitPrice: 275.00,
+            gstRate: 18,
+            lineTotal: 550.00
+          }
+        ],
+        subTotal: 2506.00,
+        totalGst: 451.08,
+        discountAmt: 0,
+        roundOff: 0.92,
+        grandTotal: 3240.00,
+        paymentMethod: 'upi',
+        createdAt: new Date(now.getTime() - 15 * 60000)
+      },
+      {
+        billNumber: '#INV-2026-0842',
+        customerName: 'Kumar Electrician (குமார்)',
+        customerPhone: '9842210492',
+        items: [
+          {
+            product: prodMap['FIN-WIR-1.5-RD']._id,
+            productName: prodMap['FIN-WIR-1.5-RD'].name,
+            tamilName: prodMap['FIN-WIR-1.5-RD'].tamilName,
+            sku: prodMap['FIN-WIR-1.5-RD'].sku,
+            rackLocation: prodMap['FIN-WIR-1.5-RD'].rackLocation,
+            unit: 'coil',
+            quantity: 4,
+            unitPrice: 1450.00,
+            gstRate: 18,
+            lineTotal: 5800.00
+          },
+          {
+            product: prodMap['CRM-FAN-BLDC-28W']._id,
+            productName: prodMap['CRM-FAN-BLDC-28W'].name,
+            tamilName: prodMap['CRM-FAN-BLDC-28W'].tamilName,
+            sku: prodMap['CRM-FAN-BLDC-28W'].sku,
+            rackLocation: prodMap['CRM-FAN-BLDC-28W'].rackLocation,
+            unit: 'unit',
+            quantity: 1,
+            unitPrice: 2850.00,
+            gstRate: 18,
+            lineTotal: 2850.00
+          }
+        ],
+        subTotal: 7161.02,
+        totalGst: 1288.98,
+        discountAmt: 0,
+        roundOff: 0,
+        grandTotal: 8450.00,
+        paymentMethod: 'khata',
+        createdAt: new Date(now.getTime() - 48 * 60000)
+      },
+      {
+        billNumber: '#INV-2026-0841',
+        customerName: 'Murugan Plumbing Works (முருகன்)',
+        customerPhone: '9789144301',
+        items: [
+          {
+            product: prodMap['FIN-WIR-1.5-RD']._id,
+            productName: prodMap['FIN-WIR-1.5-RD'].name,
+            tamilName: prodMap['FIN-WIR-1.5-RD'].tamilName,
+            sku: prodMap['FIN-WIR-1.5-RD'].sku,
+            rackLocation: prodMap['FIN-WIR-1.5-RD'].rackLocation,
+            unit: 'coil',
+            quantity: 1,
+            unitPrice: 1450.00,
+            gstRate: 18,
+            lineTotal: 1450.00
+          }
+        ],
+        subTotal: 1228.81,
+        totalGst: 221.19,
+        discountAmt: 0,
+        roundOff: 0,
+        grandTotal: 1450.00,
+        paymentMethod: 'cash',
+        createdAt: new Date(now.getTime() - 80 * 60000)
+      },
+      {
+        billNumber: '#INV-2026-0840',
+        customerName: 'Dharapuram Panchayat Union',
+        customerPhone: '9443000001',
+        items: [
+          {
+            product: prodMap['SOL-LGT-20W']._id,
+            productName: prodMap['SOL-LGT-20W'].name,
+            tamilName: prodMap['SOL-LGT-20W'].tamilName,
+            sku: prodMap['SOL-LGT-20W'].sku,
+            rackLocation: prodMap['SOL-LGT-20W'].rackLocation,
+            unit: 'unit',
+            quantity: 5,
+            unitPrice: 2400.00,
+            gstRate: 5,
+            lineTotal: 12000.00
+          },
+          {
+            product: prodMap['SCR-SS-1.5X8']._id,
+            productName: prodMap['SCR-SS-1.5X8'].name,
+            tamilName: prodMap['SCR-SS-1.5X8'].tamilName,
+            sku: prodMap['SCR-SS-1.5X8'].sku,
+            rackLocation: prodMap['SCR-SS-1.5X8'].rackLocation,
+            unit: 'box',
+            quantity: 8,
+            unitPrice: 95.00,
+            gstRate: 18,
+            lineTotal: 760.00
+          }
+        ],
+        subTotal: 11000.00,
+        totalGst: 1800.00,
+        discountAmt: 0,
+        roundOff: 0,
+        grandTotal: 12800.00,
+        paymentMethod: 'upi',
+        createdAt: new Date(now.getTime() - 130 * 60000)
+      },
+      {
+        billNumber: '#INV-2026-0839',
+        customerName: 'Balaji Residence',
+        customerPhone: '9150673040',
+        items: [
+          {
+            product: prodMap['GM-MOD-SW-6A']._id,
+            productName: prodMap['GM-MOD-SW-6A'].name,
+            tamilName: prodMap['GM-MOD-SW-6A'].tamilName,
+            sku: prodMap['GM-MOD-SW-6A'].sku,
+            rackLocation: prodMap['GM-MOD-SW-6A'].rackLocation,
+            unit: 'piece',
+            quantity: 10,
+            unitPrice: 34.00,
+            gstRate: 18,
+            lineTotal: 340.00
+          }
+        ],
+        subTotal: 288.14,
+        totalGst: 51.86,
+        discountAmt: 0,
+        roundOff: 0,
+        grandTotal: 340.00,
+        paymentMethod: 'cash',
+        createdAt: new Date(now.getTime() - 180 * 60000)
+      }
+    ];
+
+    const createdSales = await Sale.insertMany(sampleSales);
+
+    console.log('Seeding audit movement ledger matching screen 4...');
+    const auditLogs = [
+      {
+        product: prodMap['FIN-WIR-1.5-RD']._id,
+        productName: prodMap['FIN-WIR-1.5-RD'].name,
+        tamilName: prodMap['FIN-WIR-1.5-RD'].tamilName,
+        sku: prodMap['FIN-WIR-1.5-RD'].sku,
+        rackLocation: prodMap['FIN-WIR-1.5-RD'].rackLocation,
+        unit: 'coil',
+        changeType: 'sale',
+        qtyChange: -12,
+        prevStock: 26,
+        newStock: 14,
+        reasonCode: 'Direct Counter POS Bill',
+        referenceId: '#INV-2026-0842',
+        operator: 'Naveen [Staff]',
+        note: 'Counter sale to Kumar Electrician | Cash Bill • Tax Inv: ₹14,280.00',
+        createdAt: new Date(now.getTime() - 25 * 60000)
+      },
+      {
+        product: prodMap['CRM-FAN-BLDC-28W']._id,
+        productName: prodMap['CRM-FAN-BLDC-28W'].name,
+        tamilName: prodMap['CRM-FAN-BLDC-28W'].tamilName,
+        sku: prodMap['CRM-FAN-BLDC-28W'].sku,
+        rackLocation: prodMap['CRM-FAN-BLDC-28W'].rackLocation,
+        unit: 'unit',
+        changeType: 'purchase',
+        qtyChange: 25,
+        prevStock: 9,
+        newStock: 34,
+        reasonCode: 'Direct Factory Consignment',
+        referenceId: 'PO-9921',
+        operator: 'Admin [Super]',
+        note: 'Sri Ram Distributors, Trichy | LR #TR-8812 • Verified by Admin',
+        createdAt: new Date(now.getTime() - 190 * 60000)
+      },
+      {
+        product: prodMap['SCH-MCB-16A']._id,
+        productName: prodMap['SCH-MCB-16A'].name,
+        tamilName: prodMap['SCH-MCB-16A'].tamilName,
+        sku: prodMap['SCH-MCB-16A'].sku,
+        rackLocation: prodMap['SCH-MCB-16A'].rackLocation,
+        unit: 'piece',
+        changeType: 'sale',
+        qtyChange: -4,
+        prevStock: 8,
+        newStock: 4,
+        reasonCode: 'Contractor Account Dispatch',
+        referenceId: '#INV-2026-0810',
+        operator: 'Senthil [Billing]',
+        note: 'Senthil Contractor [Kongu site] | Credit Ledger Posting #412',
+        createdAt: new Date(now.getTime() - 18 * 3600000)
+      },
+      {
+        product: prodMap['SUP-VAL-BAL-1IN']._id,
+        productName: prodMap['SUP-VAL-BAL-1IN'].name,
+        tamilName: prodMap['SUP-VAL-BAL-1IN'].tamilName,
+        sku: prodMap['SUP-VAL-BAL-1IN'].sku,
+        rackLocation: prodMap['SUP-VAL-BAL-1IN'].rackLocation,
+        unit: 'piece',
+        changeType: 'damaged',
+        qtyChange: -1,
+        prevStock: 4,
+        newStock: 3,
+        reasonCode: 'Scrap / Supplier Warranty Claim',
+        referenceId: 'DAM-2026-004',
+        financialLoss: 145.00,
+        operator: 'Admin [Super]',
+        note: 'Reason: Cracked Body / Thread Leak | Returned to Supreme Agent for Credit Note',
+        createdAt: new Date(now.getTime() - 22 * 3600000)
+      },
+      {
+        product: prodMap['SCR-SS-1.5X8']._id,
+        productName: prodMap['SCR-SS-1.5X8'].name,
+        tamilName: prodMap['SCR-SS-1.5X8'].tamilName,
+        sku: prodMap['SCR-SS-1.5X8'].sku,
+        rackLocation: prodMap['SCR-SS-1.5X8'].rackLocation,
+        unit: 'box',
+        changeType: 'sale',
+        qtyChange: -2,
+        prevStock: 37,
+        newStock: 35,
+        reasonCode: 'Retail Cash Ticket',
+        referenceId: '#INV-2026-0795',
+        operator: 'Naveen [Staff]',
+        note: 'Balaji Residence carpentry work | UPI Paid ₹360.00',
+        createdAt: new Date(now.getTime() - 28 * 3600000)
+      }
+    ];
+
+    await StockLog.insertMany(auditLogs);
 
     console.log('✅ Seeding complete!');
-    console.log(`- Categories created: ${createdCategories.length}`);
-    console.log(`- Products created: ${createdProducts.length}`);
-    console.log(`- Sales created: ${createdSales.length}`);
-    console.log(`- Stock audit logs created: ${initialLogs.length + saleLogs.length}`);
+    console.log(`- Categories: ${createdCategories.length}`);
+    console.log(`- Products: ${createdProducts.length}`);
+    console.log(`- Sales: ${createdSales.length}`);
+    console.log(`- Audit Logs: ${auditLogs.length}`);
 
     await mongoose.connection.close();
     console.log('Database connection closed.');

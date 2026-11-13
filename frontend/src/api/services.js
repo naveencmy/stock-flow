@@ -74,6 +74,22 @@ export const productService = {
   },
 
   /**
+   * Fetch distinct rack locations
+   */
+  async getRacks() {
+    const res = await api.get('/products/racks');
+    return res.data?.data !== undefined ? res.data.data : res.data;
+  },
+
+  /**
+   * Fetch live inventory statistics (valuation, counts, occupancy)
+   */
+  async getStats() {
+    const res = await api.get('/products/stats');
+    return res.data?.data !== undefined ? res.data.data : res.data;
+  },
+
+  /**
    * Soft-delete product by ID (sets isActive: false)
    * @param {string} id - Product ObjectId
    */

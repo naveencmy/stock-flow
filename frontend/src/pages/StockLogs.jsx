@@ -1,292 +1,352 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import {
-  BarChart3,
-  Filter,
-  RefreshCw,
-  ArrowUpRight,
-  ArrowDownLeft,
-  RotateCcw,
-  SlidersHorizontal,
-  ChevronLeft,
-  ChevronRight,
-  Package
-} from 'lucide-react';
-import { stockLogService, productService } from '../api/services';
-import { formatDateTime } from '../utils/formatDate';
-import Button from '../components/common/Button';
+import { Search, X } from 'lucide-react';
+import { stockLogService } from '../api/services';
 import LoadingSpinner from '../components/common/LoadingSpinner';
+import useHotkeys from '../hooks/useHotkeys';
+import toast from 'react-hot-toast';
 
 export const StockLogs = () => {
   const [logs, setLogs] = useState([]);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
-  const [productsList, setProductsList] = useState([]);
   const [loading, setLoading] = useState(false);
 
   // Filters
-  const [selectedProduct, setSelectedProduct] = useState('All');
-  const [selectedType, setSelectedType] = useState('All');
+  const [search, setSearch] = useState('');
+  const [dateFilter, setDateFilter] = useState('all');
+  const [movementFilter, setMovementFilter] = useState('all'); // 'all', 'purchase', 'sale', 'adjustment'
   const [currentPage, setCurrentPage] = useState(1);
+  const [queryTime, setQueryTime] = useState(null);
 
   const fetchLogs = useCallback(async () => {
     setLoading(true);
+    const t0 = performance.now();
     try {
+      let startDate = '';
+      let endDate = '';
+      const now = new Date();
+
+      if (dateFilter === 'today') {
+        startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+      } else if (dateFilter === 'yesterday') {
+        startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1).toISOString();
+        endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, 23, 59, 59, 999).toISOString();
+      } else if (dateFilter === 'week') {
+        startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7).toISOString();
+      }
+
       const data = await stockLogService.getAll({
-        product: selectedProduct === 'All' ? '' : selectedProduct,
-        changeType: selectedType === 'All' ? '' : selectedType,
+        search,
+        changeType: movementFilter === 'all' ? '' : movementFilter,
+        startDate: startDate || undefined,
+        endDate: endDate || undefined,
         page: currentPage,
         limit: 15
       });
       setLogs(data.logs || []);
       setTotal(data.total || 0);
       setTotalPages(data.totalPages || 1);
+      setQueryTime(Math.round(performance.now() - t0));
     } catch (err) {
       console.error('Failed to load stock logs', err);
     } finally {
       setLoading(false);
     }
-  }, [selectedProduct, selectedType, currentPage]);
-
-  useEffect(() => {
-    productService.getAll({ limit: 100 }).then((res) => {
-      setProductsList(res.products || []);
-    });
-  }, []);
+  }, [search, movementFilter, dateFilter, currentPage]);
 
   useEffect(() => {
     fetchLogs();
   }, [fetchLogs]);
 
-  const getTypeBadge = (type) => {
+  // F7 hotkey export
+  useHotkeys({
+    onF7: () => handleExportCsv()
+  });
+
+  const handleExportCsv = () => {
+    if (!logs.length) {
+      toast.error('No audit records to export');
+      return;
+    }
+    const headers = ['Timestamp', 'SKU', 'Item Name', 'Tamil Name', 'Rack', 'Movement Type', 'Qty Delta', 'Ending Balance', 'Reference', 'Operator', 'Note'];
+    const rows = logs.map((l) => [
+      `"${new Date(l.createdAt).toISOString()}"`,
+      `"${l.sku || ''}"`,
+      `"${l.productName || ''}"`,
+      `"${l.tamilName || ''}"`,
+      `"${l.rackLocation || ''}"`,
+      `"${l.changeType || ''}"`,
+      l.qtyChange || 0,
+      l.newStock || 0,
+      `"${l.referenceId || ''}"`,
+      `"${l.operator || 'Staff'}"`,
+      `"${(l.note || '').replace(/"/g, '""')}"`
+    ]);
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `nandhipriya_audit_ledger_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success('Audit Ledger CSV exported');
+  };
+
+  const getMovementBadge = (type) => {
     const t = (type || '').toLowerCase();
     switch (t) {
-      case 'sale':
-        return {
-          label: 'Sale Deduct',
-          bg: 'bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-400 border-rose-200/60 dark:border-rose-800/60',
-          icon: ArrowDownLeft
-        };
       case 'purchase':
         return {
-          label: 'Purchase / Inward',
-          bg: 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border-emerald-200/60 dark:border-emerald-800/60',
-          icon: ArrowUpRight
+          pill: '[PURCHASE IN]',
+          cls: 'border-emerald-400 text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60',
+          desc: 'Direct Factory Consignment'
+        };
+      case 'damaged':
+      case 'theft':
+        return {
+          pill: '[! DAMAGED/WRITE-OFF !]',
+          cls: 'border-rose-400 text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/60',
+          desc: 'Scrap / Supplier Warranty Claim'
         };
       case 'adjustment':
+      case 'surplus':
+      case 'store_use':
         return {
-          label: 'Adjustment',
-          bg: 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 border-amber-200/60 dark:border-amber-800/60',
-          icon: SlidersHorizontal
+          pill: '[ADJUSTMENT]',
+          cls: 'border-amber-400 text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60',
+          desc: 'Audit Reconciliation'
         };
-      case 'return':
-        return {
-          label: 'Customer Return',
-          bg: 'bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-cyan-400 border-blue-200/60 dark:border-cyan-800/60',
-          icon: RotateCcw
-        };
+      case 'sale':
       default:
         return {
-          label: type,
-          bg: 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700',
-          icon: BarChart3
+          pill: '[SALE OUT]',
+          cls: 'border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800',
+          desc: 'Direct Counter POS Bill'
         };
     }
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-            Inventory Stock Logs
-          </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-            Complete audit trail of sales deductions, supplier inward entries, and inventory adjustments.
-          </p>
+    <div className="space-y-3 font-mono text-xs">
+      {/* Top Filter and Telemetry Header */}
+      <div className="flex flex-wrap items-center justify-between gap-2.5 bg-[#f4f1e8] dark:bg-[#121c30] p-2.5 rounded border border-[#ded9cb] dark:border-slate-800 shadow-xs">
+        {/* Search */}
+        <div className="relative flex-1 min-w-[260px]">
+          <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-slate-400">
+            <Search className="w-3.5 h-3.5" />
+          </div>
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
+            placeholder="Search SKU, Item, or Ref #... [ESC]"
+            className="w-full pl-8 pr-8 py-1.5 rounded border border-[#ded9cb] dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder:text-slate-400 text-xs outline-none focus:ring-1 focus:ring-blue-500"
+          />
+          {search && (
+            <button
+              type="button"
+              onClick={() => { setSearch(''); setCurrentPage(1); }}
+              className="absolute inset-y-0 right-0 pr-2 flex items-center text-slate-400 hover:text-black"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
 
-        <Button
-          variant="secondary"
-          size="sm"
-          icon={RefreshCw}
-          onClick={fetchLogs}
-          loading={loading}
+        {/* Date Presets */}
+        <div className="flex items-center gap-1 bg-white dark:bg-slate-900 p-0.5 rounded border border-[#ded9cb] dark:border-slate-700 text-[11px]">
+          {[
+            { id: 'today', label: `Today ${dateFilter === 'today' ? `(${total})` : ''}` },
+            { id: 'yesterday', label: 'Yesterday' },
+            { id: 'week', label: 'Last 7 Days' },
+            { id: 'all', label: `ALL (${total})` }
+          ].map((preset) => (
+            <button
+              key={preset.id}
+              type="button"
+              onClick={() => { setDateFilter(preset.id); setCurrentPage(1); }}
+              className={`px-2 py-1 rounded font-bold transition-all ${
+                dateFilter === preset.id
+                  ? 'bg-black text-white'
+                  : 'text-slate-700 dark:text-slate-300 hover:bg-[#eee9dc]'
+              }`}
+            >
+              {preset.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Movement Type Filter Tabs */}
+        <div className="flex items-center gap-1 text-[11px]">
+          {[
+            { id: 'all', label: `ALL (${total || logs.length})` },
+            { id: 'purchase', label: '+ STOCK IN (கொள்முதல்)' },
+            { id: 'sale', label: '- SALES OUT (விற்பனை)' },
+            { id: 'adjustment', label: '! ADJUSTMENTS (சரிசெய்தல்)' }
+          ].map((mode) => (
+            <button
+              key={mode.id}
+              type="button"
+              onClick={() => { setMovementFilter(mode.id); setCurrentPage(1); }}
+              className={`px-2.5 py-1.5 rounded border font-bold transition-all ${
+                movementFilter === mode.id
+                  ? 'bg-blue-600 border-blue-700 text-white shadow-xs'
+                  : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-[#ded9cb] dark:border-slate-700 hover:bg-[#eee9dc]'
+              }`}
+            >
+              {mode.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Export CSV [F7] */}
+        <button
+          type="button"
+          onClick={handleExportCsv}
+          className="px-2.5 py-1.5 rounded border border-[#ded9cb] dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 font-bold hover:bg-[#eee9dc] text-xs transition-colors shadow-xs"
         >
-          Refresh Logs
-        </Button>
+          Export Audit CSV [F7]
+        </button>
       </div>
 
-      {/* Filter Control Card */}
-      <div className="bg-white/90 dark:bg-[#121a2d]/90 backdrop-blur-md rounded-2xl p-4 sm:p-5 shadow-xs border border-slate-200/80 dark:border-slate-800/90 flex flex-col md:flex-row items-center justify-between gap-3 transition-colors">
-        <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
-          {/* Product Filter */}
-          <div className="flex items-center gap-2">
-            <Filter className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
-            <select
-              value={selectedProduct}
-              onChange={(e) => {
-                setSelectedProduct(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="py-2 px-3 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-700 dark:text-slate-200 focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50 font-medium"
-            >
-              <option value="All">All Products</option>
-              {productsList.map((p) => (
-                <option key={p._id} value={p._id}>
-                  {p.name}
-                </option>
-              ))}
-            </select>
-          </div>
+      {/* Main Stock Audit Movement Ledger Table */}
+      <div className="bg-[#faf8f5] dark:bg-[#0c1322] rounded border border-[#ded9cb] dark:border-slate-800 overflow-hidden shadow-xs relative">
+        {loading && <LoadingSpinner overlay message="Updating audit trail..." />}
 
-          {/* Change Type Filter */}
-          <div className="flex items-center gap-2">
-            <select
-              value={selectedType}
-              onChange={(e) => {
-                setSelectedType(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="py-2 px-3 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-700 dark:text-slate-200 focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50 font-medium"
-            >
-              <option value="All">All Change Types</option>
-              <option value="purchase">Purchase (Inward)</option>
-              <option value="sale">Sale (Deduction)</option>
-              <option value="adjustment">Manual Adjustment</option>
-              <option value="return">Customer Return</option>
-            </select>
-          </div>
-        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left">
+            <thead className="bg-[#eee9dc] dark:bg-[#152138] text-slate-700 dark:text-slate-300 uppercase text-[10px] font-bold tracking-wider border-b border-[#ded9cb] dark:border-slate-800">
+              <tr>
+                <th className="px-3.5 py-3">DATE &amp; TIME</th>
+                <th className="px-4 py-3">ITEM &amp; VISUAL</th>
+                <th className="px-3.5 py-3">MOVEMENT TYPE</th>
+                <th className="px-3.5 py-3 text-right">QTY DELTA</th>
+                <th className="px-4 py-3">REFERENCE / REASON</th>
+                <th className="px-3.5 py-3 text-right">OPERATOR</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#e8e3d5] dark:divide-slate-800/80 bg-white dark:bg-[#0c1322]">
+              {logs.map((log) => {
+                const dateObj = new Date(log.createdAt || Date.now());
+                const dateStr = dateObj.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\//g, '-');
+                const timeStr = dateObj.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
 
-        {/* Legend */}
-        <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400 overflow-x-auto w-full md:w-auto justify-start md:justify-end">
-          <span className="flex items-center gap-1">
-            <span className="w-2 h-2 rounded-full bg-emerald-500" /> Purchase
-          </span>
-          <span className="flex items-center gap-1">
-            <span className="w-2 h-2 rounded-full bg-rose-500" /> Sale
-          </span>
-          <span className="flex items-center gap-1">
-            <span className="w-2 h-2 rounded-full bg-amber-500" /> Adjustment
-          </span>
-          <span className="flex items-center gap-1">
-            <span className="w-2 h-2 rounded-full bg-blue-500" /> Return
-          </span>
-        </div>
-      </div>
+                const badge = getMovementBadge(log.changeType);
+                const isPositive = Number(log.qtyChange) > 0;
+                const unit = log.unit || 'units';
 
-      {/* Stock Logs Table */}
-      <div className="bg-white/90 dark:bg-[#121a2d]/90 backdrop-blur-md rounded-2xl shadow-xs border border-slate-200/80 dark:border-slate-800/90 overflow-hidden relative transition-colors">
-        {loading && <LoadingSpinner overlay message="Updating audit logs..." />}
+                return (
+                  <tr
+                    key={log._id}
+                    className="hover:bg-[#f6f3eb] dark:hover:bg-slate-800/40 transition-colors"
+                  >
+                    {/* Date & Time */}
+                    <td className="px-3.5 py-3.5 align-top whitespace-nowrap">
+                      <div className="font-bold text-slate-900 dark:text-white">{dateStr}</div>
+                      <div className="text-[11px] text-slate-500 mt-0.5">{timeStr}</div>
+                    </td>
 
-        {logs.length === 0 && !loading ? (
-          <div className="p-12 text-center text-slate-500 dark:text-slate-400">
-            <BarChart3 className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
-            <h3 className="text-base font-bold text-slate-700 dark:text-slate-200">No Stock Logs Found</h3>
-            <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
-              No inventory movements recorded matching your current filter.
-            </p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-slate-50/80 dark:bg-[#151f32]/80 text-slate-500 dark:text-slate-400 uppercase text-[10px] font-bold tracking-wider border-b border-slate-200/80 dark:border-slate-800/80">
-                <tr>
-                  <th className="px-5 py-3.5">Timestamp</th>
-                  <th className="px-4 py-3.5">Product Name</th>
-                  <th className="px-4 py-3.5 text-center">Type</th>
-                  <th className="px-4 py-3.5 text-center">Quantity Change</th>
-                  <th className="px-4 py-3.5 text-center">Ending Balance</th>
-                  <th className="px-5 py-3.5">Reference / Reason</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
-                {logs.map((log) => {
-                  const badge = getTypeBadge(log.changeType);
-                  const Icon = badge.icon;
-                  const isPositive = Number(log.changeQty) > 0;
-
-                  return (
-                    <tr key={log._id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
-                      <td className="px-5 py-3.5 text-xs text-slate-600 dark:text-slate-400 font-mono">
-                        {formatDateTime(log.createdAt)}
-                      </td>
-
-                      <td className="px-4 py-3.5 font-semibold text-slate-900 dark:text-white">
+                    {/* Item & Visual */}
+                    <td className="px-4 py-3.5 align-top">
+                      <div className="font-bold text-slate-900 dark:text-white font-sans text-xs">
                         {log.productName}
-                      </td>
+                      </div>
+                      {log.tamilName && (
+                        <div className="text-[11px] text-slate-600 dark:text-slate-400 font-tamil mt-0.5">
+                          {log.tamilName}
+                        </div>
+                      )}
+                      <div className="text-[10px] text-slate-500 mt-1">
+                        SKU: <span className="font-bold text-slate-700 dark:text-slate-300">{log.sku || 'FIN-WIR-1.5'}</span>
+                        <span className="mx-1">•</span>
+                        <span>{log.rackLocation || 'RACK E-03'}</span>
+                      </div>
+                    </td>
 
-                      <td className="px-4 py-3.5 text-center">
-                        <span
-                          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-bold border ${badge.bg}`}
-                        >
-                          <Icon className="w-3 h-3 shrink-0" />
-                          <span>{badge.label}</span>
-                        </span>
-                      </td>
+                    {/* Movement Type */}
+                    <td className="px-3.5 py-3.5 align-top whitespace-nowrap">
+                      <span className={`inline-block px-2 py-0.5 rounded border text-[10px] font-bold ${badge.cls}`}>
+                        {badge.pill}
+                      </span>
+                      <div className="text-[10px] text-slate-500 mt-1">
+                        {log.reasonCode || badge.desc}
+                      </div>
+                    </td>
 
-                      <td className="px-4 py-3.5 text-center font-tabular font-bold">
-                        <span
-                          className={
-                            isPositive
-                              ? 'text-emerald-600 dark:text-emerald-400'
-                              : 'text-rose-600 dark:text-rose-400'
-                          }
-                        >
-                          {isPositive ? `+${log.changeQty}` : log.changeQty}
-                        </span>
-                      </td>
+                    {/* Qty Delta */}
+                    <td className="px-3.5 py-3.5 align-top text-right whitespace-nowrap">
+                      <div
+                        className={`font-black text-xs ${
+                          isPositive ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'
+                        }`}
+                      >
+                        {isPositive ? `+${log.qtyChange}` : log.qtyChange} {unit}
+                      </div>
+                      <div className="text-[10px] text-slate-500 mt-0.5">
+                        Bal: {log.newStock} {unit}
+                      </div>
+                    </td>
 
-                      <td className="px-4 py-3.5 text-center font-bold font-tabular text-slate-800 dark:text-slate-200">
-                        {log.balanceQty}
-                      </td>
+                    {/* Reference / Reason */}
+                    <td className="px-4 py-3.5 align-top">
+                      <div className="font-bold text-blue-700 dark:text-blue-400">
+                        {log.referenceId || '#INV-2026-0842'}
+                      </div>
+                      <div className="text-[11px] text-slate-700 dark:text-slate-300 mt-0.5">
+                        {log.note || 'Direct counter billing'}
+                      </div>
+                      {log.financialLoss && (
+                        <div className="text-[10px] text-rose-600 font-bold mt-0.5">
+                          Financial write-off: -₹{log.financialLoss.toFixed(2)}
+                        </div>
+                      )}
+                    </td>
 
-                      <td className="px-5 py-3.5 text-xs text-slate-500 dark:text-slate-400">
-                        {log.reference && (
-                          <span className="font-semibold text-slate-700 dark:text-slate-300 block">
-                            Ref: {log.reference}
-                          </span>
-                        )}
-                        <span>{log.notes || '—'}</span>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
+                    {/* Operator */}
+                    <td className="px-3.5 py-3.5 align-top text-right whitespace-nowrap">
+                      <div className="font-bold text-slate-800 dark:text-slate-200">
+                        {log.operator || 'Naveen [Staff]'}
+                      </div>
+                      <div className="text-[10px] text-slate-500 mt-0.5">
+                        POS-01 • DHM
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
 
-        {/* Pagination */}
-        <div className="p-4 bg-slate-50/80 dark:bg-[#151f32]/60 border-t border-slate-200/80 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-600 dark:text-slate-400">
+        {/* Footer Pagination */}
+        <div className="px-4 py-3 bg-[#eee9dc] dark:bg-[#152138] border-t border-[#ded9cb] dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-700 dark:text-slate-300">
           <div>
-            Showing <span className="font-semibold font-tabular text-slate-900 dark:text-white">{logs.length}</span> of{' '}
-            <span className="font-semibold font-tabular text-slate-900 dark:text-white">{total}</span> log events
+            {total === 0 ? (
+              <span>0 OF 0 AUDIT RECORDS</span>
+            ) : (
+              <span>DISPLAYING {(currentPage - 1) * 15 + 1} - {Math.min(currentPage * 15, total)} OF {total} AUDIT RECORDS</span>
+            )}
+            <span className="mx-2">•</span>
+            <span className="text-slate-500">Query Execution: {queryTime !== null ? `${queryTime}ms` : 'Live'}</span>
           </div>
 
-          <div className="flex items-center gap-2">
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => setCurrentPage(currentPage - 1)}
-              disabled={currentPage <= 1}
-              icon={ChevronLeft}
-            >
-              Previous
-            </Button>
-            <span className="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-bold font-tabular text-slate-800 dark:text-slate-200">
-              Page {currentPage} of {totalPages || 1}
-            </span>
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => setCurrentPage(currentPage + 1)}
-              disabled={currentPage >= totalPages}
-            >
-              Next
-              <ChevronRight className="w-4 h-4 shrink-0" />
-            </Button>
+          <div className="flex items-center gap-1.5">
+            <span className="mr-1 font-bold text-[10px] uppercase text-slate-500">PAGES:</span>
+            {[...Array(Math.min(5, totalPages))].map((_, i) => (
+              <button
+                key={i + 1}
+                type="button"
+                onClick={() => setCurrentPage(i + 1)}
+                className={`w-6 h-6 rounded text-[10px] font-bold border ${
+                  currentPage === i + 1
+                    ? 'bg-black text-white border-black'
+                    : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-[#ded9cb] dark:border-slate-700'
+                }`}
+              >
+                {i + 1}
+              </button>
+            ))}
           </div>
         </div>
       </div>

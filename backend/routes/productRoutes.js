@@ -12,6 +12,8 @@ const {
   createProduct,
   updateProduct,
   deleteProduct,
+  getDistinctRacks,
+  getInventoryStats,
 } = require('../controllers/productController');
 const {
   validateCreateProduct,
@@ -23,6 +25,8 @@ router.route('/').get(getProducts).post(validateCreateProduct, createProduct);
 
 // Static routes before parameterized routes
 router.get('/low-stock', getLowStockProducts);
+router.get('/racks', getDistinctRacks);
+router.get('/stats', getInventoryStats);
 
 router
   .route('/:id')

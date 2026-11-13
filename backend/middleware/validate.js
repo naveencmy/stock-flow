@@ -206,8 +206,8 @@ const validateCreateSale = [
     .withMessage('Payment method must be a string')
     .trim()
     .toLowerCase()
-    .isIn(['cash', 'upi', 'card', 'credit'])
-    .withMessage('Payment method must be one of: cash, upi, card, credit'),
+    .isIn(['cash', 'upi', 'card', 'credit', 'khata'])
+    .withMessage('Payment method must be one of: cash, upi, card, credit, khata'),
   checkValidation,
 ];
 
@@ -220,10 +220,25 @@ const validateStockAdjust = [
     .isMongoId()
     .withMessage('Product ID must be a valid ID'),
   body('qtyChange')
-    .notEmpty()
-    .withMessage('Quantity change is required')
+    .optional()
     .isInt()
     .withMessage('Quantity change must be an integer'),
+  body('newStockQty')
+    .optional()
+    .isInt({ min: 0 })
+    .withMessage('New stock quantity must be a non-negative integer'),
+  body('changeType')
+    .optional()
+    .isString()
+    .trim(),
+  body('reasonCode')
+    .optional()
+    .isString()
+    .trim(),
+  body('operator')
+    .optional()
+    .isString()
+    .trim(),
   body('note')
     .optional()
     .isString()

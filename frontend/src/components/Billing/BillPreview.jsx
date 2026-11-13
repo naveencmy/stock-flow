@@ -16,6 +16,7 @@ import { formatCurrency } from '../../utils/formatCurrency';
 import { formatDateTime } from '../../utils/formatDate';
 import { sendWhatsAppBill } from '../../utils/whatsapp';
 import { whatsappService } from '../../api/services';
+import logoSvg from '../../assets/logo.svg';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import toast from 'react-hot-toast';
@@ -453,9 +454,11 @@ export const BillPreview = ({
             <div className="border-b-2 border-slate-900 pb-4 mb-4">
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-xl bg-slate-900 text-amber-400 flex items-center justify-center font-bold text-xl print:border print:border-black">
-                    <Zap className="w-7 h-7 fill-amber-400" />
-                  </div>
+                  <img
+                    src={logoSvg}
+                    alt="Nandhipriya Electricals"
+                    className="h-14 sm:h-16 w-auto object-contain rounded"
+                  />
                   <div>
                     <h1 className="text-xl font-black tracking-wider uppercase text-slate-900 font-mono">
                       NANDHIPRIYA ELECTRICALS

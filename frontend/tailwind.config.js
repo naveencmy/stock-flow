@@ -8,10 +8,20 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['"Plus Jakarta Sans"', 'Inter', '-apple-system', 'sans-serif'],
+        sans: ['"Plus Jakarta Sans"', 'Inter', '"Noto Sans Tamil"', '-apple-system', 'sans-serif'],
+        tamil: ['"Noto Sans Tamil"', 'sans-serif'],
         mono: ['"JetBrains Mono"', 'monospace'],
       },
       colors: {
+        retail: {
+          bg: '#f6f4ee',
+          panel: '#ffffff',
+          surface: '#faf8f5',
+          border: '#e2ded4',
+          borderDark: '#d5d0c2',
+          textMuted: '#64748b',
+          header: '#0f172a'
+        },
         brand: {
           50: '#eff6ff',
           100: '#dbeafe',

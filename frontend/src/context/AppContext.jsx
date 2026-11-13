@@ -18,6 +18,26 @@ export const AppProvider = ({ children }) => {
     }
   });
 
+  const [language, setLanguage] = useState(() => {
+    try {
+      return localStorage.getItem('np_pos_lang') || 'en';
+    } catch {
+      return 'en';
+    }
+  });
+
+  const toggleLanguage = () => {
+    setLanguage(prev => {
+      const next = prev === 'en' ? 'ta' : 'en';
+      try {
+        localStorage.setItem('np_pos_lang', next);
+      } catch (e) {
+        console.error('Failed to persist language', e);
+      }
+      return next;
+    });
+  };
+
   // Dark/Light Theme state with system / localStorage support
   const [theme, setTheme] = useState(() => {
     try {
@@ -164,6 +184,9 @@ export const AppProvider = ({ children }) => {
       return [...prev, {
         productId: product._id,
         productName: product.name,
+        tamilName: product.tamilName || '',
+        sku: product.sku || '',
+        rackLocation: product.rackLocation || '',
         unitPrice: Number(product.unitPrice) || 0,
         gstRate: Number(product.gstRate) || 18,
         quantity: 1,
@@ -209,6 +232,7 @@ export const AppProvider = ({ children }) => {
       addToCart, updateCartQty, removeFromCart, clearCart,
       isSidebarOpen, toggleSidebar, closeSidebar,
       isSidebarCollapsed, toggleSidebarCollapse,
+      language, setLanguage, toggleLanguage,
       theme, setTheme, toggleTheme,
       soundEnabled, toggleSound, playChime,
       isCommandPaletteOpen, setIsCommandPaletteOpen

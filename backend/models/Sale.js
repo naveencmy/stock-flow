@@ -7,6 +7,10 @@ const saleItemSchema = new mongoose.Schema({
     required: true
   },
   productName: { type: String, required: true },
+  tamilName: { type: String, default: '' },
+  sku: { type: String, default: '' },
+  rackLocation: { type: String, default: '' },
+  unit: { type: String, default: 'piece' },
   quantity: { type: Number, required: true, min: 1 },
   unitPrice: { type: Number, required: true, min: 0 },
   gstRate: { type: Number, required: true, min: 0 },
@@ -27,14 +31,16 @@ const saleSchema = new mongoose.Schema({
       message: '10 digits only'
     }
   },
+  customerGstin: { type: String, trim: true, default: '' },
   items: [saleItemSchema],
   subTotal: { type: Number, required: true, min: 0 },
   totalGst: { type: Number, required: true, min: 0 },
   discountAmt: { type: Number, default: 0, min: 0 },
+  roundOff: { type: Number, default: 0 },
   grandTotal: { type: Number, required: true, min: 0 },
   paymentMethod: {
     type: String,
-    enum: ['cash', 'upi', 'card', 'credit'],
+    enum: ['cash', 'upi', 'card', 'credit', 'khata'],
     default: 'cash',
     lowercase: true,
     trim: true

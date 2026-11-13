@@ -82,6 +82,28 @@ const deleteProduct = asyncHandler(async (req, res) => {
   });
 });
 
+// @desc    Get distinct rack locations
+// @route   GET /api/products/racks
+const getDistinctRacks = asyncHandler(async (req, res) => {
+  const racks = await productService.getDistinctRacks();
+
+  res.status(200).json({
+    success: true,
+    data: racks,
+  });
+});
+
+// @desc    Get inventory statistics
+// @route   GET /api/products/stats
+const getInventoryStats = asyncHandler(async (req, res) => {
+  const stats = await productService.getInventoryStats();
+
+  res.status(200).json({
+    success: true,
+    data: stats,
+  });
+});
+
 module.exports = {
   getProducts,
   getLowStockProducts,
@@ -89,4 +111,6 @@ module.exports = {
   createProduct,
   updateProduct,
   deleteProduct,
+  getDistinctRacks,
+  getInventoryStats,
 };

@@ -1,22 +1,7 @@
 import React, { useState, useMemo } from 'react';
-import {
-  ShoppingCart,
-  User,
-  Phone,
-  CreditCard,
-  Trash2,
-  Printer,
-  Receipt,
-  Sparkles,
-  Coins,
-  QrCode,
-  Banknote,
-  Keyboard,
-  MessageCircle
-} from 'lucide-react';
+import { Trash2, MessageCircle } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import CartItem from './CartItem';
-import Button from '../common/Button';
 import { formatCurrency } from '../../utils/formatCurrency';
 import { calculateGst } from '../../utils/calculateGst';
 
@@ -25,17 +10,16 @@ export const Cart = ({ onCheckout, loading = false }) => {
 
   const [customerName, setCustomerName] = useState('Walk-in Customer');
   const [customerPhone, setCustomerPhone] = useState('');
+  const [customerGstin, setCustomerGstin] = useState('');
   const [autoSendWhatsApp, setAutoSendWhatsApp] = useState(true);
-  const [paymentMethod, setPaymentMethod] = useState('Cash');
+  const [paymentMethod, setPaymentMethod] = useState('cash'); // 'cash', 'upi', 'card', 'khata'
   const [discount, setDiscount] = useState('0');
-  const [tenderedAmount, setTenderedAmount] = useState('');
 
   // Compute bill financials
   const totals = useMemo(() => {
     let subtotal = 0;
     let totalCgst = 0;
     let totalSgst = 0;
-    let totalIgst = 0;
     let totalTax = 0;
 
     cart.forEach((item) => {
@@ -44,39 +28,26 @@ export const Cart = ({ onCheckout, loading = false }) => {
       subtotal += linePrice;
       totalCgst += gst.cgst;
       totalSgst += gst.sgst;
-      totalIgst += gst.igst;
       totalTax += gst.totalGst;
     });
 
     const discountAmount = Math.max(0, Number(discount) || 0);
-    const grandTotal = Math.max(0, subtotal + totalTax - discountAmount);
+    const rawGrandTotal = subtotal + totalTax - discountAmount;
+    const roundedGrandTotal = Math.round(rawGrandTotal);
+    const roundOff = +(roundedGrandTotal - rawGrandTotal).toFixed(2);
 
     return {
       subtotal,
       cgst: totalCgst,
       sgst: totalSgst,
-      igst: totalIgst,
       totalTax,
       discountAmount,
-      grandTotal
+      roundOff,
+      grandTotal: roundedGrandTotal
     };
   }, [cart, discount]);
 
-  // Real-time change return calculation
-  const numericTendered = Number(tenderedAmount) || 0;
-  const changeDue = numericTendered > 0 ? numericTendered - totals.grandTotal : 0;
-
-  const handleSetExactTender = () => {
-    setTenderedAmount(String(Math.ceil(totals.grandTotal)));
-  };
-
-  const handleAddTender = (amount) => {
-    const current = Number(tenderedAmount) || 0;
-    setTenderedAmount(String(current + amount));
-  };
-
-  const handleCheckoutSubmit = (e) => {
-    e?.preventDefault();
+  const handleCheckoutSubmit = (printImmediately = true) => {
     if (cart.length === 0) return;
 
     if (playChime) playChime('success');
@@ -84,13 +55,17 @@ export const Cart = ({ onCheckout, loading = false }) => {
     onCheckout({
       customerName: customerName.trim() || 'Walk-in Customer',
       customerPhone: customerPhone.trim() || undefined,
+      customerGstin: customerGstin.trim() || undefined,
       autoSendWhatsApp,
-      paymentMethod: (paymentMethod || 'cash').toLowerCase(),
+      paymentMethod,
       discountAmt: totals.discountAmount,
-      discount: totals.discountAmount,
+      roundOff: totals.roundOff,
       items: cart.map((i) => ({
         productId: i.productId,
         productName: i.productName,
+        tamilName: i.tamilName || '',
+        sku: i.sku || '',
+        rackLocation: i.rackLocation || '',
         quantity: i.quantity,
         unitPrice: i.unitPrice,
         gstRate: i.gstRate || 18,
@@ -100,129 +75,110 @@ export const Cart = ({ onCheckout, loading = false }) => {
       subtotal: totals.subtotal,
       cgst: totals.cgst,
       sgst: totals.sgst,
-      igst: totals.igst,
       totalGst: totals.totalTax,
       grandTotal: totals.grandTotal,
-      tenderedAmount: numericTendered || totals.grandTotal,
-      changeDue: Math.max(0, changeDue)
+      printImmediately
     });
   };
 
   return (
-    <div className="bg-white/90 dark:bg-[#121a2d]/90 backdrop-blur-md rounded-2xl shadow-xs border border-slate-200/80 dark:border-slate-800/90 p-4 sm:p-5 flex flex-col h-full transition-colors">
+    <div className="bg-[#faf8f5] dark:bg-[#0c1322] rounded border border-[#ded9cb] dark:border-slate-800 p-3 sm:p-4 flex flex-col h-full font-mono text-xs shadow-xs transition-colors">
       {/* Header */}
-      <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800 shrink-0">
-        <div className="flex items-center gap-2">
-          <div className="p-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-800/50">
-            <Receipt className="w-4 h-4" />
+      <div className="flex items-center justify-between pb-2.5 border-b border-[#ded9cb] dark:border-slate-800 shrink-0">
+        <div>
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <h3 className="text-xs sm:text-sm font-black uppercase tracking-tight text-slate-900 dark:text-white">
+              ACTIVE INVOICE TRAY
+            </h3>
           </div>
-          <div>
-            <h3 className="text-base font-bold text-slate-900 dark:text-white">Active Invoice</h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400">{cart.length} items in tray</p>
-          </div>
+          <p className="text-[10px] text-slate-500 mt-0.5 font-tamil">
+            {cart.length} பொருட்கள் பதிவாகியுள்ளன
+          </p>
         </div>
 
         {cart.length > 0 && (
           <button
             type="button"
             onClick={clearCart}
-            className="text-xs font-semibold text-slate-400 hover:text-red-500 transition-colors flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/30"
+            className="text-[10px] font-bold text-slate-500 hover:text-rose-600 transition-colors flex items-center gap-1 px-2 py-0.5 rounded border border-[#ded9cb] dark:border-slate-700 bg-white dark:bg-slate-900"
           >
-            <Trash2 className="w-3.5 h-3.5" />
-            Clear
+            <Trash2 className="w-3 h-3" />
+            Clear Tray
           </button>
         )}
       </div>
 
-      {/* Customer Info Section */}
-      <div className="py-3 space-y-2.5 border-b border-slate-100 dark:border-slate-800 shrink-0">
+      {/* Customer Info Form */}
+      <div className="py-2.5 space-y-2 border-b border-[#ded9cb] dark:border-slate-800 shrink-0">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {/* Customer Name */}
           <div>
-            <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-              Customer
+            <label className="block text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase mb-0.5">
+              CUSTOMER / நிறுவனம்
             </label>
-            <div className="relative">
-              <User className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" />
-              <input
-                type="text"
-                value={customerName}
-                onChange={(e) => setCustomerName(e.target.value)}
-                placeholder="Customer Name"
-                className="w-full pl-8 pr-2 py-1.5 text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-none text-slate-900 dark:text-white"
-              />
-            </div>
+            <input
+              type="text"
+              value={customerName}
+              onChange={(e) => setCustomerName(e.target.value)}
+              placeholder="e.g. Senthil Contractor / Walk-in"
+              className="w-full px-2.5 py-1.5 text-xs bg-white dark:bg-slate-900 border border-[#ded9cb] dark:border-slate-700 rounded text-slate-900 dark:text-white outline-none focus:ring-1 focus:ring-blue-500 font-mono"
+            />
           </div>
 
-          {/* Customer Phone */}
+          {/* Customer Phone & Auto-WhatsApp */}
           <div>
-            <label className="flex items-center justify-between text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-              <span>Phone Number</span>
-              {customerPhone.trim().length === 10 && (
-                <label className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1 cursor-pointer select-none bg-emerald-50 dark:bg-emerald-950/40 px-1.5 py-0.5 rounded-md border border-emerald-200 dark:border-emerald-800">
+            <div className="flex items-center justify-between mb-0.5">
+              <label className="text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase">
+                PHONE NUMBER
+              </label>
+              {customerPhone.trim().length >= 10 && (
+                <label className="text-[9px] text-emerald-700 dark:text-emerald-400 font-bold flex items-center gap-1 cursor-pointer select-none bg-emerald-50 dark:bg-emerald-950/60 px-1 py-0.2 rounded border border-emerald-300 dark:border-emerald-800">
                   <input
                     type="checkbox"
                     checked={autoSendWhatsApp}
                     onChange={(e) => setAutoSendWhatsApp(e.target.checked)}
-                    className="rounded border-emerald-300 text-emerald-600 focus:ring-emerald-500 w-3 h-3"
+                    className="w-2.5 h-2.5"
                   />
-                  <MessageCircle className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
-                  <span>Auto-WhatsApp</span>
+                  <MessageCircle className="w-2.5 h-2.5" />
+                  <span>AUTO-WHATSAPP</span>
                 </label>
               )}
-            </label>
-            <div className="relative">
-              <Phone className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" />
-              <input
-                type="tel"
-                value={customerPhone}
-                onChange={(e) => setCustomerPhone(e.target.value)}
-                placeholder="10-digit mobile"
-                maxLength={10}
-                className="w-full pl-8 pr-2 py-1.5 text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-none font-mono text-slate-900 dark:text-white"
-              />
             </div>
+            <input
+              type="tel"
+              value={customerPhone}
+              onChange={(e) => setCustomerPhone(e.target.value)}
+              placeholder="10-digit mobile (e.g. 9150673040)"
+              maxLength={12}
+              className="w-full px-2.5 py-1.5 text-xs bg-white dark:bg-slate-900 border border-[#ded9cb] dark:border-slate-700 rounded text-slate-900 dark:text-white outline-none focus:ring-1 focus:ring-blue-500 font-mono"
+            />
           </div>
         </div>
 
-        {/* Payment Method Choice */}
-        <div className="flex items-center gap-1.5 pt-1">
-          <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mr-1">
-            Mode:
-          </span>
-          {[
-            { id: 'Cash', icon: Banknote },
-            { id: 'UPI', icon: QrCode },
-            { id: 'Card', icon: CreditCard },
-            { id: 'Credit', icon: Coins }
-          ].map(({ id: mode, icon: ModeIcon }) => (
-            <button
-              key={mode}
-              type="button"
-              onClick={() => setPaymentMethod(mode)}
-              className={`flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-semibold transition-all ${
-                paymentMethod === mode
-                  ? 'bg-blue-600 text-white shadow-xs ring-1 ring-blue-400'
-                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
-              }`}
-            >
-              <ModeIcon className="w-3 h-3" />
-              <span>{mode}</span>
-            </button>
-          ))}
+        {/* Optional GSTIN for Contractor / B2B */}
+        <div>
+          <label className="block text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase mb-0.5">
+            GSTIN (FOR B2B TAX INVOICE - OPTIONAL)
+          </label>
+          <input
+            type="text"
+            value={customerGstin}
+            onChange={(e) => setCustomerGstin(e.target.value.toUpperCase())}
+            placeholder="e.g. 33AAAAB0000A1Z5"
+            maxLength={15}
+            className="w-full px-2.5 py-1.5 text-xs bg-white dark:bg-slate-900 border border-[#ded9cb] dark:border-slate-700 rounded text-slate-900 dark:text-white outline-none focus:ring-1 focus:ring-blue-500 font-mono"
+          />
         </div>
       </div>
 
-      {/* Cart Line Items */}
-      <div className="flex-1 overflow-y-auto py-3 space-y-2 min-h-[160px] max-h-[260px]">
+      {/* Cart Items Scroll Area */}
+      <div className="flex-1 overflow-y-auto space-y-1.5 py-2 min-h-[140px]">
         {cart.length === 0 ? (
-          <div className="h-full flex flex-col items-center justify-center text-center p-6 text-slate-400">
-            <div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-800/60 flex items-center justify-center mb-2">
-              <ShoppingCart className="w-6 h-6 stroke-1 text-slate-400" />
-            </div>
-            <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">Invoice tray is empty</p>
-            <p className="text-xs text-slate-400 mt-0.5">
-              Click "+ Add" from product selector or use quick search (Ctrl+K)
+          <div className="h-full flex flex-col items-center justify-center text-center p-6 bg-white dark:bg-slate-900 rounded border border-dashed border-[#ded9cb] dark:border-slate-800">
+            <p className="text-xs font-bold text-slate-600 dark:text-slate-400">Invoice tray is empty</p>
+            <p className="text-[10px] text-slate-400 mt-0.5 font-tamil">
+              பொருட்களைச் சேர்க்க இடதுபுறம் கிளிக் செய்யவும்
             </p>
           </div>
         ) : (
@@ -237,128 +193,96 @@ export const Cart = ({ onCheckout, loading = false }) => {
         )}
       </div>
 
-      {/* Financial Summary & Breakdown */}
-      <div className="pt-3 border-t border-slate-200/80 dark:border-slate-800 space-y-2.5 shrink-0 bg-slate-50/70 dark:bg-[#0c1322]/80 -mx-4 -mb-4 p-4 rounded-b-2xl">
-        <div className="space-y-1 text-xs text-slate-600 dark:text-slate-300">
-          <div className="flex justify-between">
-            <span>Items Subtotal:</span>
-            <span className="font-semibold font-tabular text-slate-800 dark:text-slate-200">
-              {formatCurrency(totals.subtotal)}
-            </span>
-          </div>
-
-          {/* GST Breakup */}
-          {totals.cgst > 0 && (
-            <div className="flex justify-between text-slate-500 dark:text-slate-400 text-[11px]">
-              <span>Tax (CGST + SGST):</span>
-              <span className="font-tabular">{formatCurrency(totals.totalTax)}</span>
-            </div>
-          )}
-
-          {/* Discount Input */}
-          <div className="flex items-center justify-between pt-1">
-            <span className="text-slate-600 dark:text-slate-400 font-medium">Special Discount:</span>
-            <div className="flex items-center gap-1 w-24">
-              <span className="text-xs text-slate-400 font-semibold">₹</span>
-              <input
-                type="number"
-                min="0"
-                value={discount}
-                onChange={(e) => setDiscount(e.target.value)}
-                placeholder="0"
-                className="w-full px-2 py-1 text-right text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-1 focus:ring-blue-500 focus:outline-none font-tabular font-semibold text-slate-800 dark:text-white"
-              />
-            </div>
+      {/* Calculations Breakdown */}
+      <div className="pt-2 border-t border-[#ded9cb] dark:border-slate-800 space-y-1 text-xs shrink-0 bg-[#f4f1e8] dark:bg-slate-900/60 p-2.5 rounded">
+        <div className="flex justify-between text-slate-600 dark:text-slate-400">
+          <span>Sub-Total (Taxable Value):</span>
+          <span className="font-bold text-slate-900 dark:text-white">
+            {formatCurrency(totals.subtotal)}
+          </span>
+        </div>
+        <div className="flex justify-between text-slate-600 dark:text-slate-400 text-[11px]">
+          <span>CGST (9%):</span>
+          <span>{formatCurrency(totals.cgst)}</span>
+        </div>
+        <div className="flex justify-between text-slate-600 dark:text-slate-400 text-[11px]">
+          <span>SGST (9%):</span>
+          <span>{formatCurrency(totals.sgst)}</span>
+        </div>
+        <div className="flex items-center justify-between text-slate-600 dark:text-slate-400 text-[11px]">
+          <span>Contractor Discount:</span>
+          <div className="flex items-center gap-1">
+            <span>₹</span>
+            <input
+              type="number"
+              min="0"
+              value={discount}
+              onChange={(e) => setDiscount(e.target.value)}
+              className="w-16 px-1 py-0.5 text-right rounded border border-[#ded9cb] dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-bold"
+            />
           </div>
         </div>
-
-        {/* Grand Total Bar */}
-        <div className="pt-2 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
-          <div>
-            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
-              Grand Total
-            </span>
-            <span className="text-[10px] text-slate-400">Incl. all taxes</span>
+        {totals.roundOff !== 0 && (
+          <div className="flex justify-between text-slate-500 text-[11px]">
+            <span>Round-off:</span>
+            <span>{totals.roundOff > 0 ? `+${totals.roundOff.toFixed(2)}` : totals.roundOff.toFixed(2)}</span>
           </div>
-          <span className="text-2xl font-black font-tabular text-blue-600 dark:text-cyan-400">
+        )}
+        <div className="flex justify-between items-center pt-1.5 border-t border-[#ded9cb] dark:border-slate-700">
+          <span className="font-black text-xs uppercase tracking-tight text-slate-900 dark:text-white">
+            NET PAYABLE (செலுத்த வேண்டிய தொகை):
+          </span>
+          <span className="font-black text-base text-blue-700 dark:text-blue-400">
             {formatCurrency(totals.grandTotal)}
           </span>
         </div>
+      </div>
 
-        {/* Quick Cash Tender Calculator (Only for Cash mode) */}
-        {paymentMethod === 'Cash' && cart.length > 0 && (
-          <div className="p-2.5 rounded-xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                Cash Tendered:
-              </span>
-              <div className="flex items-center gap-1 w-28">
-                <span className="text-xs text-slate-400 font-semibold font-mono">₹</span>
-                <input
-                  type="number"
-                  value={tenderedAmount}
-                  onChange={(e) => setTenderedAmount(e.target.value)}
-                  placeholder={String(Math.ceil(totals.grandTotal))}
-                  className="w-full px-2 py-1 text-right text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg font-tabular font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-                />
-              </div>
-            </div>
+      {/* Payment Method Selector */}
+      <div className="pt-2 shrink-0">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-1">
+          {[
+            { id: 'cash', label: 'CASH [F10]', sub: 'ரொக்கம்' },
+            { id: 'upi', label: 'UPI / QR', sub: 'ஜிபே/போன்பே' },
+            { id: 'card', label: 'CARD', sub: 'கார்டு' },
+            { id: 'khata', label: 'KHATA', sub: 'கடன் கணக்கு' }
+          ].map((mode) => (
+            <button
+              key={mode.id}
+              type="button"
+              onClick={() => setPaymentMethod(mode.id)}
+              className={`py-1.5 px-1 rounded border text-center font-bold text-[10px] uppercase transition-all ${
+                paymentMethod === mode.id
+                  ? 'bg-black text-white border-black shadow-xs'
+                  : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-[#ded9cb] dark:border-slate-700 hover:bg-[#eee9dc]'
+              }`}
+            >
+              <div>{mode.label}</div>
+              <div className="font-tamil text-[9px] font-normal opacity-80">{mode.sub}</div>
+            </button>
+          ))}
+        </div>
+      </div>
 
-            {/* Quick Currency Chips */}
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <button
-                type="button"
-                onClick={handleSetExactTender}
-                className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300"
-              >
-                Exact
-              </button>
-              {[100, 200, 500, 1000].map((note) => (
-                <button
-                  key={note}
-                  type="button"
-                  onClick={() => handleAddTender(note)}
-                  className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 text-blue-700 dark:text-cyan-400 font-mono"
-                >
-                  +{note}
-                </button>
-              ))}
-            </div>
-
-            {/* Change Due Visualizer */}
-            {numericTendered > 0 && (
-              <div className={`pt-1.5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs font-bold ${
-                changeDue >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-500'
-              }`}>
-                <span>{changeDue >= 0 ? 'Change to Return:' : 'Balance Due:'}</span>
-                <span className="font-tabular text-sm">
-                  {formatCurrency(Math.abs(changeDue))}
-                </span>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Auto-WhatsApp Helper Indicator */}
-        {customerPhone.trim().length === 10 && autoSendWhatsApp && (
-          <div className="flex items-center justify-center gap-1.5 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50/80 dark:bg-emerald-950/30 py-1.5 px-3 rounded-xl border border-emerald-200/50 dark:border-emerald-800/40 animate-fade-in">
-            <MessageCircle className="w-3.5 h-3.5 shrink-0" />
-            <span className="truncate">Auto-dispatches WhatsApp invoice to +91 {customerPhone.trim()}</span>
-          </div>
-        )}
-
-        {/* Save & Print Trigger */}
-        <Button
-          variant="primary"
-          size="lg"
-          icon={Printer}
-          onClick={handleCheckoutSubmit}
+      {/* Checkout Action CTAs */}
+      <div className="pt-2.5 space-y-1.5 shrink-0">
+        <button
+          type="button"
           disabled={cart.length === 0 || loading}
-          loading={loading}
-          className="w-full font-bold shadow-glow-sm hover:shadow-glow-md"
+          onClick={() => handleCheckoutSubmit(true)}
+          className="w-full py-2.5 px-4 rounded bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-xs transition-all disabled:opacity-50 active:scale-95"
         >
-          Save & Print Invoice (A4 / Thermal)
-        </Button>
+          <span>PRINT THERMAL RECEIPT [ENTER]</span>
+        </button>
+
+        <button
+          type="button"
+          disabled={cart.length === 0 || loading}
+          onClick={() => handleCheckoutSubmit(false)}
+          className="w-full py-1.5 px-4 rounded border border-[#ded9cb] dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 font-bold text-[10px] hover:bg-[#eee9dc] transition-all disabled:opacity-50 text-center"
+        >
+          Save Invoice (No Print)
+        </button>
       </div>
     </div>
   );

@@ -1,176 +1,162 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Menu,
-  Plus,
-  Calendar,
-  MapPin,
-  Moon,
-  Sun,
-  Volume2,
-  VolumeX,
-  Search,
-  Sparkles
-} from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { Moon, Sun, Volume2, VolumeX, Plus } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
-import Button from '../common/Button';
-import Logo from '../common/Logo';
+import logoSvg from '../../assets/logo.svg';
 
 export const Header = () => {
   const {
-    toggleSidebar,
-    isSidebarCollapsed,
     theme,
     toggleTheme,
     soundEnabled,
     toggleSound,
-    setIsCommandPaletteOpen
+    language,
+    toggleLanguage,
   } = useApp();
 
   const navigate = useNavigate();
   const location = useLocation();
-  const [currentDateTime, setCurrentDateTime] = useState('');
-
-  const getPageInfo = (path) => {
-    switch (path) {
-      case '/':
-        return { title: 'Dashboard', desc: 'Real-time sales & inventory metrics' };
-      case '/products':
-        return { title: 'Product Catalog', desc: 'Manage electrical items & stock limits' };
-      case '/billing':
-        return { title: 'POS Billing Counter', desc: 'Create tax invoices & fast checkout' };
-      case '/sales':
-        return { title: 'Sales Ledger', desc: 'Historical customer transactions' };
-      case '/stock-logs':
-        return { title: 'Stock Movement Logs', desc: 'Audit trail & adjustments' };
-      default:
-        return { title: 'Nandhipriya Electricals', desc: 'Stock & Billing System' };
-    }
-  };
-
-  const pageInfo = getPageInfo(location.pathname);
+  const [liveTime, setLiveTime] = useState('');
 
   useEffect(() => {
-    const updateTime = () => {
+    const update = () => {
       const now = new Date();
-      const formatted = now.toLocaleDateString('en-IN', {
-        weekday: 'short',
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric'
-      });
-      setCurrentDateTime(formatted);
+      const timeStr = now.toLocaleTimeString('en-GB', { hour12: false });
+      setLiveTime(timeStr);
     };
-
-    updateTime();
-    const interval = setInterval(updateTime, 60000);
-    return () => clearInterval(interval);
+    update();
+    const timer = setInterval(update, 1000);
+    return () => clearInterval(timer);
   }, []);
 
+  const navItems = [
+    { key: 'F1', path: '/', label: 'Dashboard', hotkey: '[F1]' },
+    { key: 'F2', path: '/billing', label: 'Billing', hotkey: '[F2]' },
+    { key: 'F3', path: '/products', label: 'Products & Racks', hotkey: '[F3]' },
+    { key: 'F4', path: '/sales', label: 'Sales History', hotkey: '[F4]' },
+    { key: 'F5', path: '/stock-logs', label: 'Stock Logs', hotkey: '[F5]' },
+  ];
+
+  const currentPath = location.pathname;
+
   return (
-    <header className="sticky top-0 z-30 h-16 bg-white/85 dark:bg-[#0f172a]/85 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800/80 px-4 sm:px-6 flex items-center justify-between no-print shadow-xs transition-colors duration-200">
-      <div className="flex items-center gap-3">
-        {/* Mobile menu trigger */}
-        <button
-          type="button"
-          onClick={toggleSidebar}
-          className="p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 lg:hidden focus:outline-none focus:ring-2 focus:ring-blue-500"
-          aria-label="Open sidebar"
+    <header className="sticky top-0 z-40 bg-[#f7f5ef] dark:bg-[#0c1220] border-b border-[#ded9cb] dark:border-slate-800 px-3 sm:px-4 py-1.5 no-print shadow-xs transition-colors duration-150">
+      <div className="flex items-center justify-between gap-2 sm:gap-4 flex-nowrap w-full">
+        {/* Brand identity block: Wide Logo in Slim Header */}
+        <div
+          className="flex items-center shrink-0 cursor-pointer select-none"
+          onClick={() => navigate('/')}
+          title="Nandhipriya Electricals"
         >
-          <Menu className="w-5 h-5" />
-        </button>
+          <img
+            src={logoSvg}
+            alt="Nandhipriya Electricals"
+            className="h-10 sm:h-11 md:h-12 w-auto max-h-12 object-contain rounded drop-shadow-xs transition-transform duration-200 hover:scale-[1.02]"
+          />
+        </div>
 
-        {/* CASE A: When Sidebar is Collapsed OR on Mobile Screen */}
-        <div className={`items-center gap-2.5 ${isSidebarCollapsed ? 'flex' : 'flex lg:hidden'}`}>
-          <Logo collapsed size="sm" />
-          <div>
-            <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100 tracking-tight flex items-center gap-1.5 font-mono">
-              <span>NANDHIPRIYA</span>
-              <span className="px-1.5 py-0.2 rounded-md bg-cyan-50 dark:bg-cyan-950/60 text-cyan-700 dark:text-cyan-400 border border-cyan-200 dark:border-cyan-800 text-[9px] font-bold">
-                POS
-              </span>
-            </h2>
+        {/* Center POS Function Key Navigation Tabs */}
+        <nav className="flex items-center gap-1 sm:gap-1.5 shrink-0">
+          {navItems.map((item) => {
+            const isActive =
+              item.path === '/'
+                ? currentPath === '/'
+                : currentPath.startsWith(item.path);
+
+            return (
+              <button
+                key={item.key}
+                type="button"
+                onClick={() => navigate(item.path)}
+                className={`px-2 sm:px-2.5 md:px-3 py-1.5 rounded text-xs font-mono font-semibold transition-all flex items-center gap-1 sm:gap-1.5 border whitespace-nowrap ${
+                  isActive
+                    ? 'bg-blue-600 border-blue-700 text-white shadow-xs'
+                    : 'bg-white dark:bg-slate-900 border-[#ded9cb] dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-[#efece2] dark:hover:bg-slate-800'
+                }`}
+              >
+                <span className={isActive ? 'text-blue-100' : 'text-slate-400'}>
+                  {item.hotkey}
+                </span>
+                <span>{item.label}</span>
+              </button>
+            );
+          })}
+        </nav>
+
+        {/* Right Status Controls - One Line */}
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+          {/* Language Switcher [EN] [தமிழ்] */}
+          <div className="flex items-center rounded border border-[#ded9cb] dark:border-slate-700 bg-white dark:bg-slate-900 p-0.5 text-[11px] font-mono">
+            <button
+              type="button"
+              onClick={toggleLanguage}
+              className={`px-1.5 py-0.5 rounded font-bold transition-all ${
+                language === 'en'
+                  ? 'bg-black text-white'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-black'
+              }`}
+            >
+              EN
+            </button>
+            <button
+              type="button"
+              onClick={toggleLanguage}
+              className={`px-1.5 py-0.5 rounded font-bold font-tamil transition-all ${
+                language === 'ta'
+                  ? 'bg-black text-white'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-black'
+              }`}
+            >
+              தமிழ்
+            </button>
           </div>
-        </div>
 
-        {/* CASE B: When Sidebar is Expanded (Desktop) */}
-        <div className={`items-center gap-3 ${!isSidebarCollapsed ? 'hidden lg:flex' : 'hidden'}`}>
-          <div className="flex items-center gap-2 text-xs">
-            <span className="flex items-center gap-1.5 font-semibold text-slate-700 dark:text-slate-300 bg-slate-100/90 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80 px-2.5 py-1 rounded-lg">
-              <MapPin className="w-3.5 h-3.5 text-blue-600 dark:text-cyan-400 shrink-0" />
-              <span>Dharapuram Main Store</span>
-            </span>
-
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 font-bold text-[11px]">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.7)]" />
-              POS Terminal Live
+          {/* Live Branch Clock */}
+          <div className="hidden xl:flex flex-col text-right font-mono text-[11px] leading-tight text-slate-700 dark:text-slate-300">
+            <span className="font-bold tabular-nums text-xs">{liveTime}</span>
+            <span className="text-[9px] text-slate-500 uppercase tracking-wider">
+              DHARAPURAM BRANCH
             </span>
           </div>
+
+          {/* Sound Toggle */}
+          <button
+            type="button"
+            onClick={toggleSound}
+            className="p-1.5 rounded border border-[#ded9cb] dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-[#efece2] dark:hover:bg-slate-800"
+            title={soundEnabled ? 'Mute POS Chimes' : 'Enable POS Chimes'}
+          >
+            {soundEnabled ? (
+              <Volume2 className="w-3.5 h-3.5 text-emerald-600" />
+            ) : (
+              <VolumeX className="w-3.5 h-3.5 text-slate-400" />
+            )}
+          </button>
+
+          {/* Theme Toggle */}
+          <button
+            type="button"
+            onClick={toggleTheme}
+            className="p-1.5 rounded border border-[#ded9cb] dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-[#efece2] dark:hover:bg-slate-800"
+            title="Toggle theme"
+          >
+            {theme === 'dark' ? (
+              <Sun className="w-3.5 h-3.5 text-amber-400" />
+            ) : (
+              <Moon className="w-3.5 h-3.5 text-blue-600" />
+            )}
+          </button>
+
+          {/* New Bill Button */}
+          <button
+            type="button"
+            onClick={() => navigate('/billing')}
+            className="flex items-center gap-1 px-2.5 sm:px-3 py-1.5 rounded bg-white dark:bg-slate-900 border border-[#ded9cb] dark:border-slate-700 text-slate-800 dark:text-white font-mono text-xs font-bold hover:bg-[#efece2] dark:hover:bg-slate-800 active:scale-95 transition-all shadow-xs whitespace-nowrap"
+          >
+            <Plus className="w-3 h-3 text-blue-600" />
+            <span>+ New Bill [F2]</span>
+          </button>
         </div>
-      </div>
-
-      {/* Center / Action Bar */}
-      <div className="flex items-center gap-2 sm:gap-3">
-        {/* Omnibar / Command Palette search button */}
-        <button
-          type="button"
-          onClick={() => setIsCommandPaletteOpen(true)}
-          className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100/80 dark:bg-slate-800/70 hover:bg-slate-200/70 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700/80 text-xs font-medium text-slate-600 dark:text-slate-300 transition-all hover:border-blue-400 group"
-          title="Search anything (Ctrl+K)"
-        >
-          <Search className="w-3.5 h-3.5 text-slate-400 group-hover:text-blue-500 transition-colors" />
-          <span className="text-slate-500 dark:text-slate-400">Quick search...</span>
-          <kbd className="ml-1 px-1.5 py-0.5 rounded bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-[10px] font-mono font-bold text-slate-500 shadow-xs">
-            Ctrl+K
-          </kbd>
-        </button>
-
-        {/* Real-time Date Badge */}
-        <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 text-xs font-semibold text-slate-600 dark:text-slate-300">
-          <Calendar className="w-3.5 h-3.5 text-slate-400" />
-          <span>{currentDateTime}</span>
-        </div>
-
-        {/* Audio Feedback Toggle */}
-        <button
-          type="button"
-          onClick={toggleSound}
-          className="p-2 rounded-xl text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors border border-transparent hover:border-slate-200 dark:hover:border-slate-700"
-          title={soundEnabled ? 'Mute POS Chimes' : 'Enable POS Chimes'}
-          aria-label="Toggle Sound"
-        >
-          {soundEnabled ? (
-            <Volume2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-          ) : (
-            <VolumeX className="w-4 h-4 text-slate-400" />
-          )}
-        </button>
-
-        {/* Dark / Light Theme Toggle */}
-        <button
-          type="button"
-          onClick={toggleTheme}
-          className="p-2 rounded-xl text-slate-500 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-transform active:scale-95 border border-transparent hover:border-slate-200 dark:hover:border-slate-700"
-          title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} Mode`}
-          aria-label="Toggle Theme"
-        >
-          {theme === 'dark' ? (
-            <Sun className="w-4 h-4 text-amber-400 transition-transform hover:rotate-45" />
-          ) : (
-            <Moon className="w-4 h-4 text-blue-600 transition-transform hover:-rotate-12" />
-          )}
-        </button>
-
-        {/* Fast Action New Bill Button */}
-        <Button
-          variant="primary"
-          size="sm"
-          icon={Plus}
-          onClick={() => navigate('/billing')}
-          className="shadow-glow-sm font-semibold hover:shadow-glow-md transition-all active:scale-95"
-        >
-          <span className="hidden sm:inline">New</span> Bill
-        </Button>
       </div>
     </header>
   );

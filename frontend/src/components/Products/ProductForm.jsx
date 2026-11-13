@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Input from '../common/Input';
 import Button from '../common/Button';
 
-const UNIT_OPTIONS = ['piece', 'meter', 'box', 'coil', 'kg', 'set'];
+const UNIT_OPTIONS = ['piece', 'coil', 'box', 'meter', 'bag', 'unit', 'set', 'kg'];
 const GST_RATES = [0, 5, 12, 18, 28];
 
 export const ProductForm = ({
@@ -14,12 +14,16 @@ export const ProductForm = ({
   loading = false
 }) => {
   const getCatValue = (cat) => (typeof cat === 'object' && cat !== null ? cat._id || cat.name : cat);
-  const getCatLabel = (cat) => (typeof cat === 'object' && cat !== null ? cat.name : cat);
 
   const defaultCategory = categories.length > 0 ? getCatValue(categories[0]) : '';
 
   const [formData, setFormData] = useState({
     name: '',
+    tamilName: '',
+    sku: '',
+    rackLocation: 'RACK E-01',
+    packagingConversion: '',
+    purchasePrice: '',
     category: defaultCategory,
     brand: '',
     unit: 'piece',
@@ -64,6 +68,11 @@ export const ProductForm = ({
 
       setFormData({
         name: initialData.name || '',
+        tamilName: initialData.tamilName || '',
+        sku: initialData.sku || '',
+        rackLocation: initialData.rackLocation || 'RACK E-01',
+        packagingConversion: initialData.packagingConversion || '',
+        purchasePrice: String(initialData.purchasePrice ?? ''),
         category: initialCatVal || defaultCategory,
         brand: initialData.brand || '',
         unit: initialData.unit || 'piece',
@@ -73,6 +82,11 @@ export const ProductForm = ({
         gstRate: String(initialData.gstRate ?? '18'),
         barcode: initialData.barcode || ''
       });
+    } else if (!formData.category && categories.length > 0) {
+      setFormData((prev) => ({
+        ...prev,
+        category: prev.category || getCatValue(categories[0])
+      }));
     }
   }, [initialData, categories, defaultCategory]);
 
@@ -81,13 +95,13 @@ export const ProductForm = ({
     if (!formData.name.trim()) errs.name = 'Product name is required';
     if (!formData.category) errs.category = 'Category is required';
     if (!formData.unitPrice || isNaN(formData.unitPrice) || Number(formData.unitPrice) < 0) {
-      errs.unitPrice = 'Enter a valid unit price';
+      errs.unitPrice = 'Enter a valid selling price';
     }
     if (!formData.stockQty || isNaN(formData.stockQty) || Number(formData.stockQty) < 0) {
       errs.stockQty = 'Enter a valid stock quantity';
     }
     if (!formData.reorderLevel || isNaN(formData.reorderLevel) || Number(formData.reorderLevel) < 0) {
-      errs.reorderLevel = 'Enter a valid reorder limit';
+      errs.reorderLevel = 'Enter a valid reorder level';
     }
     setErrors(errs);
     return Object.keys(errs).length === 0;
@@ -107,6 +121,11 @@ export const ProductForm = ({
 
     onSubmit({
       name: formData.name.trim(),
+      tamilName: formData.tamilName.trim(),
+      sku: formData.sku.trim() || formData.barcode.trim(),
+      rackLocation: formData.rackLocation.trim(),
+      packagingConversion: formData.packagingConversion.trim(),
+      purchasePrice: formData.purchasePrice ? parseFloat(formData.purchasePrice) : Math.round(parseFloat(formData.unitPrice) * 0.78),
       category: formData.category,
       brand: formData.brand.trim(),
       unit: formData.unit,
@@ -114,15 +133,15 @@ export const ProductForm = ({
       stockQty: parseInt(formData.stockQty, 10),
       reorderLevel: parseInt(formData.reorderLevel, 10),
       gstRate: parseFloat(formData.gstRate),
-      barcode: formData.barcode.trim()
+      barcode: formData.barcode.trim() || formData.sku.trim()
     });
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      {/* Product Name */}
+    <form onSubmit={handleSubmit} className="space-y-4 text-xs font-mono">
+      {/* Product Name (English) */}
       <Input
-        label="Product Name"
+        label="PRODUCT NAME (ENGLISH) *"
         name="name"
         value={formData.name}
         onChange={handleChange}
@@ -132,158 +151,173 @@ export const ProductForm = ({
         maxLength={100}
       />
 
+      {/* Tamil Name */}
+      <div>
+        <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 uppercase mb-1">
+          TAMIL NAME / தமிழ் பெயர் (OPTIONAL)
+        </label>
+        <input
+          type="text"
+          name="tamilName"
+          value={formData.tamilName}
+          onChange={handleChange}
+          placeholder="எ.கா. பினோலெக்ஸ் 1.5 மிமீ காப்பர் ஒயர் (சிவப்பு)"
+          className="w-full px-3 py-2 rounded border border-[#ded9cb] dark:border-slate-700 bg-white dark:bg-slate-900 font-tamil text-slate-900 dark:text-white text-xs outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
+
       {/* Category & Brand */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
-          <div className="flex items-center justify-between mb-1.5">
-            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-              Category <span className="text-red-500 font-bold">*</span>
+          <div className="flex items-center justify-between mb-1">
+            <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 uppercase">
+              CATEGORY *
             </label>
             {onCreateCategory && !isAddingCategory && (
               <button
                 type="button"
                 onClick={() => setIsAddingCategory(true)}
-                className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 hover:underline"
+                className="text-[11px] font-bold text-blue-600 hover:underline"
               >
-                + Add New
+                + New
               </button>
             )}
           </div>
 
           {isAddingCategory ? (
-            <div className="space-y-1.5">
-              <div className="flex items-center gap-2">
-                <input
-                  type="text"
-                  value={newCategoryName}
-                  onChange={(e) => setNewCategoryName(e.target.value)}
-                  placeholder="e.g. Wires & Cables"
-                  autoFocus
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      handleCreateCategory();
-                    } else if (e.key === 'Escape') {
-                      setIsAddingCategory(false);
-                      setNewCategoryName('');
-                    }
-                  }}
-                  className="flex-1 rounded-xl border border-blue-500 bg-white dark:bg-[#0f172a] px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-                />
-                <button
-                  type="button"
-                  disabled={creatingCatLoading || !newCategoryName.trim()}
-                  onClick={handleCreateCategory}
-                  className="px-3 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-xl text-xs font-semibold transition-colors"
-                >
-                  {creatingCatLoading ? '...' : 'Save'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsAddingCategory(false);
-                    setNewCategoryName('');
-                  }}
-                  className="px-2.5 py-2 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 rounded-xl text-xs transition-colors"
-                >
-                  Cancel
-                </button>
-              </div>
-              <p className="text-[11px] text-slate-400">Press Enter to save, Esc to cancel</p>
+            <div className="flex items-center gap-1.5">
+              <input
+                type="text"
+                value={newCategoryName}
+                onChange={(e) => setNewCategoryName(e.target.value)}
+                placeholder="Category name"
+                className="flex-1 px-2.5 py-1.5 rounded border border-blue-500 bg-white dark:bg-slate-900 text-xs"
+              />
+              <button
+                type="button"
+                onClick={handleCreateCategory}
+                className="px-2 py-1.5 bg-blue-600 text-white rounded text-xs font-bold"
+              >
+                Save
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsAddingCategory(false)}
+                className="px-2 py-1.5 text-slate-500 text-xs"
+              >
+                X
+              </button>
             </div>
           ) : (
             <select
               name="category"
               value={formData.category}
-              onChange={(e) => {
-                if (e.target.value === '__NEW__') {
-                  setIsAddingCategory(true);
-                } else {
-                  handleChange(e);
-                }
-              }}
-              className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#0f172a] px-3.5 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+              onChange={handleChange}
+              className="w-full px-3 py-2 rounded border border-[#ded9cb] dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs outline-none focus:ring-2 focus:ring-blue-500"
             >
-              {categories.length === 0 ? (
-                <option value="">Select Category</option>
-              ) : (
-                <option value="">-- Select Category --</option>
-              )}
+              <option value="">Select Category</option>
               {categories.map((cat, idx) => {
-                const val = getCatValue(cat);
-                const label = getCatLabel(cat);
+                const val = typeof cat === 'object' && cat !== null ? (cat._id || cat.name) : cat;
+                const label = typeof cat === 'object' && cat !== null ? cat.name : cat;
                 return (
                   <option key={val || idx} value={val}>
                     {label}
                   </option>
                 );
               })}
-              {onCreateCategory && (
-                <option value="__NEW__" className="font-semibold text-blue-600">
-                  + Create New Category...
-                </option>
-              )}
             </select>
-          )}
-
-          {errors.category && (
-            <p className="mt-1 text-xs text-red-600 dark:text-red-400 font-medium">{errors.category}</p>
           )}
         </div>
 
         <Input
-          label="Brand Name"
+          label="BRAND NAME"
           name="brand"
           value={formData.brand}
           onChange={handleChange}
-          placeholder="e.g. Finolex, Havells, Anchor"
-          error={errors.brand}
-          maxLength={50}
+          placeholder="e.g. Finolex, Havells, Crompton"
         />
       </div>
 
-      {/* Unit, Unit Price, GST */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      {/* SKU & Rack Location */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <Input
+          label="SKU CODE"
+          name="sku"
+          value={formData.sku}
+          onChange={handleChange}
+          placeholder="e.g. FIN-WIR-1.5-RD"
+        />
+        <Input
+          label="RACK / BIN LOCATION"
+          name="rackLocation"
+          value={formData.rackLocation}
+          onChange={handleChange}
+          placeholder="e.g. RACK E-03, BIN P-14"
+        />
+      </div>
+
+      {/* Unit of Measure & Packaging Conversion */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
-          <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
-            Unit of Measure <span className="text-red-500 font-bold">*</span>
+          <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 uppercase mb-1">
+            UNIT OF MEASURE *
           </label>
           <select
             name="unit"
             value={formData.unit}
             onChange={handleChange}
-            className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#0f172a] px-3.5 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+            className="w-full px-3 py-2 rounded border border-[#ded9cb] dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs outline-none focus:ring-2 focus:ring-blue-500 capitalize"
           >
             {UNIT_OPTIONS.map((u) => (
               <option key={u} value={u}>
-                {u.charAt(0).toUpperCase() + u.slice(1)}
+                {u}
               </option>
             ))}
           </select>
         </div>
 
         <Input
-          label="Unit Price (₹)"
+          label="PACKAGING CONVERSION"
+          name="packagingConversion"
+          value={formData.packagingConversion}
+          onChange={handleChange}
+          placeholder="e.g. 1 Coil = 90 meters, 1 Box = 12 Pcs"
+        />
+      </div>
+
+      {/* Pricing: Purchase vs Selling */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <Input
+          label="PURCHASE PRICE (₹)"
+          name="purchasePrice"
+          type="number"
+          step="0.01"
+          min="0"
+          value={formData.purchasePrice}
+          onChange={handleChange}
+          placeholder="1180.00"
+        />
+        <Input
+          label="SELLING PRICE (₹) *"
           name="unitPrice"
           type="number"
           step="0.01"
           min="0"
           value={formData.unitPrice}
           onChange={handleChange}
-          placeholder="0.00"
+          placeholder="1450.00"
           error={errors.unitPrice}
           required
         />
-
         <div>
-          <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
-            GST Rate (%)
+          <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 uppercase mb-1">
+            GST RATE (%)
           </label>
           <select
             name="gstRate"
             value={formData.gstRate}
             onChange={handleChange}
-            className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#0f172a] px-3.5 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+            className="w-full px-3 py-2 rounded border border-[#ded9cb] dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs outline-none focus:ring-2 focus:ring-blue-500"
           >
             {GST_RATES.map((rate) => (
               <option key={rate} value={rate}>
@@ -294,22 +328,21 @@ export const ProductForm = ({
         </div>
       </div>
 
-      {/* Stock Quantity & Reorder Level */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      {/* Stock Quantity & Reorder Alert */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Input
-          label="Current Stock Quantity"
+          label="CURRENT STOCK QUANTITY *"
           name="stockQty"
           type="number"
           min="0"
           value={formData.stockQty}
           onChange={handleChange}
-          placeholder="0"
+          placeholder="51"
           error={errors.stockQty}
           required
         />
-
         <Input
-          label="Reorder Alert Level"
+          label="REORDER ALERT LEVEL *"
           name="reorderLevel"
           type="number"
           min="0"
@@ -321,31 +354,21 @@ export const ProductForm = ({
         />
       </div>
 
-      {/* Barcode */}
+      {/* Barcode / SKU */}
       <Input
-        label="Barcode / SKU (Optional)"
+        label="BARCODE / SCANNER EAN-13 (OPTIONAL)"
         name="barcode"
         value={formData.barcode}
         onChange={handleChange}
-        placeholder="e.g. 8901234567890"
-        maxLength={50}
+        placeholder="890123400001"
       />
 
-      {/* Form Action Buttons */}
-      <div className="flex justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-800">
-        <Button
-          type="button"
-          variant="secondary"
-          onClick={onCancel}
-          disabled={loading}
-        >
+      {/* Action Buttons */}
+      <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#ded9cb] dark:border-slate-800">
+        <Button variant="secondary" onClick={onCancel} disabled={loading}>
           Cancel
         </Button>
-        <Button
-          type="submit"
-          variant="primary"
-          loading={loading}
-        >
+        <Button variant="primary" type="submit" loading={loading} className="bg-blue-600 hover:bg-blue-700 font-bold">
           {initialData ? 'Update Product' : 'Add Product'}
         </Button>
       </div>

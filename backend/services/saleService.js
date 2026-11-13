@@ -57,6 +57,10 @@ const createSale = async (data) => {
       saleItems.push({
         product: product._id,
         productName: product.name,
+        tamilName: product.tamilName || '',
+        sku: product.sku || '',
+        rackLocation: product.rackLocation || '',
+        unit: product.unit || 'piece',
         quantity: item.quantity,
         unitPrice,
         gstRate,
@@ -71,7 +75,8 @@ const createSale = async (data) => {
       (sum, item) => sum + (item.lineTotal * item.gstRate) / 100,
       0
     );
-    const grandTotal = subTotal + totalGst - discountAmt;
+    const roundOff = Number(data.roundOff || 0);
+    const grandTotal = subTotal + totalGst - discountAmt + roundOff;
 
     // ── Step 7: Generate bill number ─────────────────────────────────
     const billNumber = await getNextBillNumber(session);
@@ -83,10 +88,12 @@ const createSale = async (data) => {
       billNumber,
       customerName: customerName ? customerName.trim() : 'Walk-in Customer',
       customerPhone: sanitizedPhone,
+      customerGstin: data.customerGstin ? String(data.customerGstin).trim() : '',
       items: saleItemsClean,
       subTotal: Math.round(subTotal * 100) / 100,
       totalGst: Math.round(totalGst * 100) / 100,
       discountAmt,
+      roundOff: Math.round(roundOff * 100) / 100,
       grandTotal: Math.max(0, Math.round(grandTotal * 100) / 100),
       paymentMethod: payMethod,
     };
@@ -105,6 +112,23 @@ const createSale = async (data) => {
       const prevStock = product.stockQty;
       const newStock = prevStock - item.quantity;
 
+      const logPayload = {
+        product: product._id,
+        productName: product.name,
+        tamilName: product.tamilName || '',
+        sku: product.sku || '',
+        rackLocation: product.rackLocation || '',
+        unit: product.unit || 'piece',
+        changeType: 'sale',
+        qtyChange: -item.quantity,
+        prevStock,
+        newStock,
+        reasonCode: 'Direct Counter POS Bill',
+        operator: 'Naveen [Staff]',
+        referenceId: sale._id,
+        note: `Sold ${item.quantity} ${product.unit || 'units'} in bill ${billNumber}`,
+      };
+
       if (session) {
         await Product.findByIdAndUpdate(
           product._id,
@@ -112,34 +136,11 @@ const createSale = async (data) => {
           { session }
         );
 
-        await StockLog.create(
-          [
-            {
-              product: product._id,
-              productName: product.name,
-              changeType: 'sale',
-              qtyChange: -item.quantity,
-              prevStock,
-              newStock,
-              referenceId: sale._id,
-              note: `Sold ${item.quantity} units in bill ${billNumber}`,
-            },
-          ],
-          { session }
-        );
+        await StockLog.create([logPayload], { session });
       } else {
         await Product.findByIdAndUpdate(product._id, { stockQty: newStock });
 
-        await StockLog.create({
-          product: product._id,
-          productName: product.name,
-          changeType: 'sale',
-          qtyChange: -item.quantity,
-          prevStock,
-          newStock,
-          referenceId: sale._id,
-          note: `Sold ${item.quantity} units in bill ${billNumber}`,
-        });
+        await StockLog.create(logPayload);
       }
     }
 
